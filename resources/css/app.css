@@ -1,0 +1,418 @@
+@import 'tailwindcss';
+
+@source '../views/**/*.blade.php';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+:root {
+    /* Exact Tokens from design.md */
+    --color-backdrop: #D5DDC8;
+    --color-sidebar: #050505;
+    --color-sidebar-text: #E7E7E7;
+    --color-sidebar-muted: #929292;
+    --color-workspace: #F7F7F6;
+    --color-surface: #FFFFFF;
+    --color-primary-text: #111111;
+    --color-secondary-text: #666666;
+    --color-muted-text: #929292;
+    --color-border: #E6E6E6;
+    --color-accent-lime: #B7FF00;
+    --color-accent-dark: #101010;
+
+    /* Semantic Status Tokens */
+    --color-success: #079455;
+    --color-warning: #D97706;
+    --color-danger: #DC2626;
+    --color-info: #2563EB;
+
+    /* Typography */
+    --font-ui: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+html, body {
+    overflow-x: clip;
+    background-color: var(--color-backdrop);
+    color: var(--color-primary-text);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile & Tablet Fallbacks: canvas is hidden edge-to-edge */
+@media (max-width: 1023px) {
+    body {
+        background-color: var(--color-workspace);
+    }
+}
+
+/* Typography Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-ui);
+    overflow-wrap: anywhere;
+    min-width: 0;
+    letter-spacing: -0.02em;
+}
+
+/* Button & Action Utilities — per design.md specifications */
+.btn-lime {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px; /* 7-9px from design.md */
+    background-color: #B7FF00;
+    color: #101010;
+    border: 1px solid #a6ea00;
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.25rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-lime:hover {
+    background-color: #a6ea00;
+    border-color: #95d400;
+    color: #050505;
+}
+.btn-lime:active {
+    transform: scale(0.98);
+}
+.btn-lime:focus-visible {
+    outline: 2px solid #101010;
+    outline-offset: 2px;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px; /* 7-9px from design.md */
+    background-color: #FFFFFF;
+    color: #111111;
+    border: 1px solid #E6E6E6;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-secondary:hover {
+    background-color: #F7F7F6;
+    border-color: #D6D6D6;
+    color: #050505;
+}
+.btn-secondary:active {
+    transform: scale(0.98);
+}
+.btn-secondary:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+.btn-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    background-color: #050505;
+    color: #FFFFFF;
+    border: 1px solid #050505;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-dark:hover {
+    background-color: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #B7FF00;
+}
+.btn-dark:active {
+    transform: scale(0.98);
+}
+.btn-dark:focus-visible {
+    outline: 2px solid #B7FF00;
+    outline-offset: 2px;
+}
+
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    background-color: #DC2626;
+    color: #FFFFFF;
+    border: 1px solid #DC2626;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-danger:hover {
+    background-color: #B91C1C;
+    border-color: #B91C1C;
+}
+.btn-danger:active {
+    transform: scale(0.98);
+}
+
+.btn-lime svg,
+.btn-secondary svg,
+.btn-dark svg,
+.btn-danger svg {
+    flex-shrink: 0;
+}
+
+/* Modal Backdrop Utility — Perfectly Centered on all viewports */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background-color: rgba(5, 5, 5, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+.modal-backdrop.hidden {
+    display: none !important;
+}
+
+/* Card Surface Utility */
+.card-surface {
+    background-color: #FFFFFF;
+    border: 1px solid #E6E6E6;
+    border-radius: 12px;
+}
+
+/* Status Badges */
+.badge-paid {
+    padding: 0 10px;
+    border-radius: 10px;
+    background-color: #ECFDF3;
+    color: #027A48;
+    border: 1px solid #A6F4C5;
+}
+.badge-due {
+    padding: 0 10px;
+    border-radius: 10px;
+    background-color: #FFFBEB;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+.badge-unpaid {
+    padding: 0 10px;
+    border-radius: 10px;
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+.badge-neutral {
+    padding: 0 10px;
+    border-radius: 10px;
+    background-color: #F2F4F7;
+    color: #344054;
+    border: 1px solid #EAECF0;
+}
+
+/* Custom Scrollbar for Workspace */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #D9D9D9;
+    border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #BEBEBE;
+}
+
+/* ==========================================================================
+   Bulk Action Floating Dock & Selection Highlights
+   ========================================================================== */
+.bulk-action-bar {
+    position: fixed;
+    left: 50%;
+    z-index: 50;
+    width: calc(100vw - 1.5rem);
+    max-width: 44rem;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, visibility 0.22s;
+    will-change: transform, opacity;
+}
+@media (min-width: 640px) {
+    .bulk-action-bar {
+        width: auto;
+        min-width: 28rem;
+    }
+}
+.bulk-action-bar.is-visible {
+    transform: translate(-50%, 0) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+.bulk-action-bar.is-hidden {
+    transform: translate(-50%, 150%) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Row & Card selection highlight effects */
+.bulk-selected-row {
+    background-color: rgba(183, 255, 0, 0.08) !important;
+}
+.bulk-selected-card {
+    border-color: #111111 !important;
+    box-shadow: 0 0 0 2px #B7FF00, 0 8px 20px -4px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(183, 255, 0, 0.04) !important;
+}
+
+/* ==========================================================================
+   Full-Screen Page Preloader (#111111 black background)
+   ========================================================================== */
+.page-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999;
+    background-color: #111111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.page-loader-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+body.preloader-active {
+    overflow: hidden !important;
+}
+
+/* Exact Animation CSS: Lime Green Dot (#80F644) & Rotating White Square (#fff) */
+.loader {
+    --color-1: #80F644;
+    --color-2: #fff;
+    --size: 1.15px;
+
+    width: calc(50 * var(--size));
+    height: calc(165 * var(--size));
+    position: relative;
+    display: inline-block;
+}
+
+.loader::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
+    width: calc(16 * var(--size));
+    height: calc(16 * var(--size));
+    background: var(--color-1);
+    border-radius: 50%;
+    animation: bounce 2s linear infinite;
+}
+
+.loader::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    height: calc(48 * var(--size));
+    width: calc(48 * var(--size));
+    background: var(--color-2);
+    border-radius: calc(4 * var(--size));
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes bounce {
+    0%, 50%, 100% {
+        transform: translate(-50%, 0);
+        height: calc(20 * var(--size));
+    }
+
+    20% {
+        transform: translate(-25%, calc(85 * var(--size)));
+        height: calc(28 * var(--size));
+    }
+
+    25% {
+        transform: translate(-25%, calc(110 * var(--size)));
+        height: calc(12 * var(--size));
+    }
+
+    70% {
+        transform: translate(-75%, calc(85 * var(--size)));
+        height: calc(28 * var(--size));
+    }
+
+    75% {
+        transform: translate(-75%, calc(108 * var(--size)));
+        height: calc(12 * var(--size));
+    }
+}
+
+@keyframes rotate {
+    0%, 50%, 100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(90deg);
+    }
+
+    75% {
+        transform: rotate(-90deg);
+    }
+}
+
+/* Accessibility: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .loader::before,
+    .loader::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
+    .page-loader-overlay {
+        transition: none !important;
+    }
+}

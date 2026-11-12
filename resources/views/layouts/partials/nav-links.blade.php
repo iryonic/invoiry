@@ -1,0 +1,156 @@
+@php
+    $user = auth()->user();
+    $isSuperAdmin = $user?->isSuperAdmin() && !session()->has('active_tenant_id');
+@endphp
+
+@if($isSuperAdmin)
+    <!-- SUPER ADMIN PLATFORM SECTIONS -->
+    <div class="space-y-1">
+        <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Platform Hub</div>
+        
+        <a href="{{ route('superadmin.index') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.index') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="{{ route('superadmin.tenants.index') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.tenants.index') || request()->routeIs('superadmin.tenants.show') || request()->routeIs('superadmin.tenants.edit') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            <span>Businesses / Stores</span>
+        </a>
+
+        <a href="{{ route('superadmin.tenants.create') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.tenants.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>Add Business</span>
+        </a>
+    </div>
+
+    <!-- ACCESS & GOVERNANCE -->
+    <div class="space-y-1 pt-2">
+        <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Access & Governance</div>
+
+        <a href="{{ route('superadmin.users.index') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.users.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <span>Global Users & RBAC</span>
+        </a>
+
+        <a href="{{ route('superadmin.audit-logs.index') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.audit-logs.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span>System Audit Logs</span>
+        </a>
+
+        <a href="{{ route('superadmin.settings.index') }}" 
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('superadmin.settings.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>Platform Settings</span>
+        </a>
+    </div>
+@else
+    <!-- OVERVIEW -->
+    @if($user?->hasPermission('dashboard.view'))
+        <div class="space-y-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Overview</div>
+            <a href="{{ route('dashboard') }}" 
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('dashboard') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    @endif
+
+    <!-- BILLING & SALES -->
+    @if($user?->hasPermission('invoices.create') || $user?->hasPermission('invoices.view'))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Billing & Sales</div>
+            
+            @if($user?->hasPermission('invoices.create'))
+                <a href="{{ route('invoices.create') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('invoices.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Create New Bill</span>
+                </a>
+            @endif
+
+            @if($user?->hasPermission('invoices.view'))
+                <a href="{{ route('invoices.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('invoices.index*') && !request()->routeIs('invoices.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Sales Ledger</span>
+                </a>
+            @endif
+        </div>
+    @endif
+
+    <!-- INVENTORY -->
+    @if($user?->hasPermission('items.view') || $user?->hasPermission('items.create'))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Inventory</div>
+            
+            @if($user?->hasPermission('items.view'))
+                <a href="{{ route('items.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('items.index') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    <span>Devices / Stock</span>
+                </a>
+            @endif
+
+            @if($user?->hasPermission('items.create'))
+                <a href="{{ route('items.create') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('items.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Inward Purchase</span>
+                </a>
+            @endif
+        </div>
+    @endif
+
+    <!-- CONTACTS & LEDGER -->
+    @if($user?->hasPermission('customers.view') || $user?->hasPermission('suppliers.view'))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Contacts & Ledger</div>
+            
+            @if($user?->hasPermission('customers.view'))
+                <a href="{{ route('customers.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('customers.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span>Customer Credit (Khata)</span>
+                </a>
+            @endif
+
+            @if($user?->hasPermission('suppliers.view'))
+                <a href="{{ route('suppliers.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('suppliers.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    <span>Suppliers</span>
+                </a>
+            @endif
+        </div>
+    @endif
+
+    <!-- STORE ADMINISTRATION & RBAC -->
+    @if($user?->canManageStaff() || $user?->canAccessSettings())
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Store Admin</div>
+            
+            @if($user?->canManageStaff())
+                <a href="{{ route('staff.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('staff.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span>Staff & Roles</span>
+                </a>
+            @endif
+
+            @if($user?->canAccessSettings())
+                <a href="{{ route('settings.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('settings.*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>Store Profile & UPI</span>
+                </a>
+            @endif
+        </div>
+    @endif
+@endif
