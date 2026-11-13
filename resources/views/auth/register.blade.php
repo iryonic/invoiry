@@ -100,12 +100,12 @@
 
                 <!-- Header -->
                 <div class="space-y-1">
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F7F7F6] border border-[#E6E6E6] text-[11px] font-bold text-[#111111] mb-2 font-mono">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F7F7F6] border border-[#E6E6E6] text-[11px] font-bold text-[#111111] mb-2 font-mono">
                         <span class="w-2 h-2 rounded-full bg-[#B7FF00] border border-[#111111]"></span>
                         <span>STORE ONBOARDING</span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Create Business Store</h1>
-                    <p class="text-xs sm:text-sm text-[#666666]">Enter your store details and administrative credentials.</p>
+                    <p class="text-xs sm:text-sm text-[#666666]">Please enter your store details and administrative credentials.</p>
                 </div>
 
                 <!-- Error Alert -->
@@ -200,7 +200,7 @@
                     </div>
 
                     <button type="submit" class="w-full py-3 bg-[#B7FF00] hover:bg-[#a6ec00] text-[#101010] rounded-xl text-xs sm:text-sm font-black transition shadow-xs whitespace-nowrap active:scale-[0.98] min-h-[46px] flex items-center justify-center gap-2 border border-[#a6ea00] mt-2">
-                        <span>Activate 14-Day Free Trial & Start Invoicing</span>
+                        <span>Activate 14-Day Free Trial </span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </button>
                 </form>
@@ -210,7 +210,7 @@
                     <p class="text-xs text-[#666666]">
                         Already registered your business?
                         <a href="{{ route('login') }}" class="font-bold text-[#111111] hover:underline inline-flex items-center gap-1">
-                            <span>Sign in to terminal</span>
+                            <span>Sign in </span>
                         </a>
                     </p>
                 </div>

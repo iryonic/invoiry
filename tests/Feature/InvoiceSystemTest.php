@@ -838,4 +838,40 @@ class InvoiceSystemTest extends TestCase
         $response->assertSee('Tenants');
         $response->assertSee('+ Tenant');
     }
+
+    public function test_invoice_creation_with_empty_amount_paid_defaults_to_zero_unpaid(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $stockItem = Item::where('tenant_id', $user->tenant_id)->inStock()->first();
+
+        // Customer pays nothing at checkout (empty amount_paid)
+        $response = $this->actingAs($user)->post(route('invoices.store'), [
+            'invoice_date' => now()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'is_gst' => 0,
+            'discount' => 0.00,
+            'amount_paid' => '', // left empty by cashier
+            'customer_name' => 'Credit Customer',
+            'customer_phone' => '9419000111',
+            'items' => [
+                [
+                    'item_id' => $stockItem->id,
+                    'item_name' => $stockItem->item_name,
+                    'selling_price' => 15000.00,
+                    'warranty_status' => 'no_warranty',
+                ],
+            ],
+        ]);
+
+        $invoice = Invoice::orderByDesc('id')->first();
+        $response->assertRedirect(route('invoices.show', $invoice));
+
+        $this->assertEquals(0.00, (float) $invoice->amount_paid);
+        $this->assertEquals(15000.00, (float) $invoice->grand_total);
+        $this->assertEquals('unpaid', $invoice->payment_status);
+        $this->assertEquals(15000.00, (float) $invoice->amount_due);
+
+        // Ensure no payment record was created
+        $this->assertEquals(0, $invoice->payments()->count());
+    }
 }

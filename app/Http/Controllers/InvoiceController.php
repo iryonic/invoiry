@@ -293,7 +293,13 @@ class InvoiceController extends Controller
                     ];
                 }
 
-                $amountPaid = isset($validated['amount_paid']) && $validated['amount_paid'] !== '' ? (float) $validated['amount_paid'] : $grandTotal;
+                $isAmountPaidVisible = DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'amount_paid');
+
+                if (! $isAmountPaidVisible) {
+                    $amountPaid = $grandTotal;
+                } else {
+                    $amountPaid = isset($validated['amount_paid']) && $validated['amount_paid'] !== '' ? (float) $validated['amount_paid'] : 0.00;
+                }
 
                 $paymentStatus = 'paid';
                 if ($amountPaid <= 0) {

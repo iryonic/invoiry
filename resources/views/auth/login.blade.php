@@ -103,12 +103,12 @@
 
                 <!-- Header -->
                 <div class="space-y-1">
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F7F7F6] border border-[#E6E6E6] text-[11px] font-bold text-[#111111] mb-2 font-mono">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F7F7F6] border border-[#E6E6E6] text-[11px] font-bold text-[#111111] mb-2 font-mono">
                         <span class="w-2 h-2 rounded-full bg-[#B7FF00] border border-[#111111]"></span>
                         <span>INVOIRY ERP</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Sign In</h1>
-                    <p class="text-xs sm:text-sm text-[#666666]">Enter your registered credentials or select an evaluation role.</p>
+                    <h1 class="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Welcome Back</h1>
+                    <p class="text-xs sm:text-sm text-[#666666]">Please enter your registered credentials .</p>
                 </div>
 
                 <!-- 1-Click Evaluation Roles Container -->
@@ -165,8 +165,8 @@
                     <div>
                         <label for="login" class="block text-xs font-bold text-[#344054] mb-1.5">Email or Phone Number</label>
                         <div class="relative">
-                            <input type="text" name="login" id="login" required value="{{ old('login', 'freetrial@gmail.com') }}"
-                                placeholder="name@store.com or 10-digit mobile"
+                            <input type="text" name="login" id="login" required value="{{ old('login') }}"
+                                placeholder="Your email  or 10-digit mobile"
                                 class="w-full px-4 py-2.5 pl-10 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-medium text-[#111111] placeholder-[#929292] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition min-h-[44px]">
                             <svg class="w-4 h-4 text-[#929292] absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
                         </div>
@@ -180,7 +180,7 @@
                             </a>
                         </div>
                         <div class="relative">
-                            <input type="password" name="password" id="password" required value="freetrial"
+                            <input type="password" name="password" id="password" required value=""
                                 placeholder="••••••••"
                                 class="w-full px-4 py-2.5 pl-10 pr-12 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-medium text-[#111111] placeholder-[#929292] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition min-h-[44px]">
                             <svg class="w-4 h-4 text-[#929292] absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>

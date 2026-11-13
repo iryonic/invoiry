@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Counter Overview')
-@section('page-title', 'Counter Overview')
+@section('title', 'Dashboard')
+@section('page-title', 'Dashboard')
 @section('page-subtitle', ($tenant->name ?? 'Retail Store') . ' · ' . ($tenant->city ? $tenant->city . ' Terminal' : 'Billing Counter'))
 
 @section('content')
@@ -10,10 +10,8 @@
     <!-- Top Action Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">Counter Overview</h2>
-            <p class="text-xs sm:text-sm text-[#666666] mt-0.5">
-                {{ $tenant->name }} &bull; GSTIN: {{ $tenant->gstin ?: 'Unregistered' }} &bull; Live Terminal
-            </p>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight"> {{ $tenant->name }}  Dashboard </h2>
+            
         </div>
 
         <div class="flex items-center gap-2.5">
@@ -35,7 +33,6 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Today's Intake</span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#F2F4F7] text-[#344054]">{{ $todayInvoicesCount }} bills</span>
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight">₹{{ number_format($todaySales, 2) }}</div>
@@ -47,7 +44,6 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Monthly Revenue</span>
-                <span class="text-[11px] font-mono text-[#929292]">{{ now()->format('M Y') }}</span>
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight">₹{{ number_format($monthSales, 2) }}</div>
@@ -59,7 +55,6 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">In-Stock Phones</span>
-                <span class="w-2 h-2 rounded-full bg-[#079455]"></span>
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight">{{ $inStockCount }}</div>
@@ -71,7 +66,7 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider text-[#D97706]">Active Credit</span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] font-bold">Khata</span>
+                
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#D97706] tracking-tight">₹{{ number_format($totalDue, 2) }}</div>

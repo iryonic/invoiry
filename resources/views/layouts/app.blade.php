@@ -179,28 +179,22 @@
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                 <span>New Tenant</span>
                             </a>
-                            <div class="h-6 w-px bg-[#E6E6E6] hidden sm:block"></div>
-                            <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#111111] text-[#B7FF00] text-[11px] font-bold font-mono border border-black">
-                                <span class="w-2 h-2 rounded-full bg-[#B7FF00] animate-pulse"></span>
-                                <span>Root Console</span>
-                            </div>
+                            
+                           
                         @elseif($user?->hasPermission('invoices.create'))
                             <a href="{{ route('invoices.create') }}" class="btn-lime text-xs px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg min-h-[36px]">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                 <span>New Bill</span>
                             </a>
-                            <div class="h-6 w-px bg-[#E6E6E6] hidden sm:block"></div>
-                            <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#F2F4F7] border border-[#EAECF0] text-[11px] font-medium text-[#344054]">
-                                <span class="w-2 h-2 rounded-full bg-[#079455]"></span>
-                                <span>Live POS</span>
-                            </div>
+                            
+                           
                         @endif
 
                         <div class="h-6 w-px bg-[#E6E6E6] hidden sm:block"></div>
 
                         <!-- Profile Link in Header -->
-                        <a href="{{ route('profile.edit') }}" title="My Profile & Security" class="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full border border-[#E6E6E6] hover:border-black/30 hover:bg-[#F7F7F6] transition min-h-[36px]">
-                            <img src="{{ $user?->avatar_url }}" alt="{{ $user?->name }}" class="w-6 h-6 rounded-full object-cover bg-[#050505]">
+                        <a href="{{ route('profile.edit') }}" title="My Profile & Security" class="flex items-center gap-2 p-2 rounded-lg border border-[#E6E6E6] hover:border-black/30 hover:bg-[#F7F7F6] transition min-h-[36px]">
+                            <img src="{{ $user?->avatar_url }}" alt="{{ $user?->name }}" class="w-6 h-6 rounded-sm object-cover bg-[#050505]">
                             <span class="text-xs font-semibold text-[#111111] hidden md:inline truncate max-w-[120px]">{{ $user?->name }}</span>
                         </a>
                     </div>

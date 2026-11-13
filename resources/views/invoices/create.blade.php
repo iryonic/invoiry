@@ -65,7 +65,7 @@
                     <svg class="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     <span>Customer & Payment Information</span>
                 </h3>
-                <span class="text-[11px] text-[#929292]">Search or type new customer</span>
+               
             </div>
 
             <!-- Quick Customer Selector Dropdown if customers exist -->
@@ -395,11 +395,17 @@
                     <!-- Amount Paid / Partial Payment (Khata) -->
                     @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'amount_paid'))
                         <div>
-                            <label class="block text-xs font-semibold text-[#111111] mb-1">Amount Paid by Customer (₹)</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="amount_paid" class="block text-xs font-semibold text-[#111111]">Amount Paid by Customer (₹)</label>
+                                <button type="button" onclick="setFullPaid()" class="text-[11px] font-bold text-[#079455] hover:text-[#067643] hover:underline cursor-pointer">
+                                    Pay Full (₹<span id="fullPayAmt">0.00</span>)
+                                </button>
+                            </div>
                             <input type="number" step="0.01" name="amount_paid" id="amount_paid" oninput="calculateTotals()"
-                                placeholder="Leave blank for full settlement"
+                                value="{{ old('amount_paid') }}"
+                                placeholder="Leave empty if nothing paid (₹0.00)"
                                 class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-bold text-[#079455] focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                            <span class="text-[10px] text-[#929292]">Defaults to full payment</span>
+                            <span class="text-[10px] text-[#666666]">Leave empty if nothing paid at checkout (unpaid/credit bill).</span>
                         </div>
                     @else
                         <input type="hidden" name="amount_paid" id="amount_paid" value="">
@@ -483,9 +489,18 @@
 @push('scripts')
 <script>
     let itemIndex = 1;
+    let currentGrandTotal = 0;
     const upiVpa = "{{ $tenant->upi_id ?? '' }}";
     const shopName = "{{ $tenant->name ?? 'Invoice' }}";
     const shopStateCode = "{{ $tenant->state_code ?: '01' }}".trim();
+
+    function setFullPaid() {
+        const paidInput = document.getElementById('amount_paid');
+        if (paidInput) {
+            paidInput.value = currentGrandTotal > 0 ? currentGrandTotal.toFixed(2) : '';
+            calculateTotals();
+        }
+    }
 
     function setGstRate(rate) {
         const input = document.getElementById('tax_rate');
@@ -680,10 +695,16 @@
             splitBreakdown.style.display = 'none';
         }
 
+        currentGrandTotal = grandTotal;
         document.getElementById('summaryGrandTotal').innerText = '₹' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2});
 
+        const fullPayEl = document.getElementById('fullPayAmt');
+        if (fullPayEl) {
+            fullPayEl.innerText = grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        }
+
         const paidInput = document.getElementById('amount_paid');
-        const paidVal = (paidInput && paidInput.value !== '') ? parseFloat(paidInput.value) : grandTotal;
+        const paidVal = (paidInput && paidInput.value !== '') ? (parseFloat(paidInput.value) || 0) : 0;
         const due = Math.max(0, grandTotal - paidVal);
 
         const dueRow = document.getElementById('dueRow');

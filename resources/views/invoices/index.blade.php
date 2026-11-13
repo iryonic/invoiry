@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Sales Ledger · Invoices')
-@section('page-title', 'Sales Ledger')
+@section('page-title', 'Invoices')
 @section('page-subtitle', 'Chronological sales registry, payment statuses, and invoice documents')
 
 @section('content')
@@ -10,7 +10,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">Sales Ledger & Invoices</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight"> Invoices</h2>
             <p class="text-xs sm:text-sm text-[#666666] mt-0.5">Track all counter transactions, customer settlements, and payment states</p>
         </div>
 
