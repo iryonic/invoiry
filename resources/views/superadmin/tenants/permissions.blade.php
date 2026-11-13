@@ -44,7 +44,7 @@
             <button type="button" onclick="switchGovMode('perms')" id="gov_btn_perms" class="gov-mode-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0 bg-[#111111] text-[#B7FF00]">
                 1. RBAC Permissions
             </button>
-            <button type="button" onclick="switchGovMode('forms')" id="gov_btn_forms" class="gov-mode-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0 bg-white text-[#666666] border border-[#E6E6E6] hover:text-[#111111]">
+            <button type="button" onclick="switchGovMode('forms')" id="gov_btn_forms" class="gov-mode-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex-shrink-0 bg-white text-[#666666] border border-[#E6E6E6] ">
                 2. Form Fields
             </button>
         </div>

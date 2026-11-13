@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StaffController;
@@ -39,6 +40,12 @@ Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::get('/demo/{type}', [AuthController::class, 'demoLogin'])->name('demo.login');
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Public Legal & Help Documentation Pages
+Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [PageController::class, 'terms'])->name('terms');
+Route::get('/help', [PageController::class, 'help'])->name('help');
+Route::get('/documentation', [PageController::class, 'help'])->name('docs');
 
 /*
 |--------------------------------------------------------------------------

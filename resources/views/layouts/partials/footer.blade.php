@@ -13,12 +13,17 @@
     $contactInfo = \App\Models\SystemSetting::get('footer_contact_info', '');
     $badgeText = \App\Models\SystemSetting::get('footer_badge_text', '');
 
-    $link1Text = \App\Models\SystemSetting::get('footer_link_1_text', '');
-    $link1Url = \App\Models\SystemSetting::get('footer_link_1_url', '');
-    $link2Text = \App\Models\SystemSetting::get('footer_link_2_text', '');
-    $link2Url = \App\Models\SystemSetting::get('footer_link_2_url', '');
-    $link3Text = \App\Models\SystemSetting::get('footer_link_3_text', '');
-    $link3Url = \App\Models\SystemSetting::get('footer_link_3_url', '');
+    $link1Text = \App\Models\SystemSetting::get('footer_link_1_text', 'Privacy Policy') ?: 'Privacy Policy';
+    $rawLink1 = \App\Models\SystemSetting::get('footer_link_1_url', '');
+    $link1Url = (!empty($rawLink1) && $rawLink1 !== '#') ? $rawLink1 : route('privacy');
+
+    $link2Text = \App\Models\SystemSetting::get('footer_link_2_text', 'Terms of Service') ?: 'Terms of Service';
+    $rawLink2 = \App\Models\SystemSetting::get('footer_link_2_url', '');
+    $link2Url = (!empty($rawLink2) && $rawLink2 !== '#') ? $rawLink2 : route('terms');
+
+    $link3Text = \App\Models\SystemSetting::get('footer_link_3_text', 'Help & Documentation') ?: 'Help & Documentation';
+    $rawLink3 = \App\Models\SystemSetting::get('footer_link_3_url', '');
+    $link3Url = (!empty($rawLink3) && $rawLink3 !== '#') ? $rawLink3 : route('help');
 @endphp
 
 <footer class="mt-8 pt-5 pb-6 border-t border-[#E6E6E6] text-xs text-[#666666] select-none" id="globalPageFooter">

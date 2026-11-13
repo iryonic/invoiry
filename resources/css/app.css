@@ -46,6 +46,47 @@ html, body {
     }
 }
 
+/* Universal Interactive Pointer Cursor across INVOIRY Platform */
+a,
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+[type="checkbox"],
+[type="radio"],
+select,
+summary,
+label:has(input),
+label[for],
+.cursor-pointer,
+[onclick],
+[data-modal],
+[data-action],
+[data-confirm],
+[data-tab],
+.toggle-switch,
+.switch-input,
+.stock-picker,
+.nav-link,
+[data-bulk-item],
+[data-select-all] {
+    cursor: pointer;
+}
+
+input[type="file"]::-webkit-file-upload-button,
+input[type="file"]::file-selector-button {
+    cursor: pointer;
+}
+
+button:disabled,
+[type="button"]:disabled,
+[type="submit"]:disabled,
+[disabled],
+.cursor-not-allowed {
+    cursor: not-allowed !important;
+}
+
 /* Typography Headings */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-ui);
