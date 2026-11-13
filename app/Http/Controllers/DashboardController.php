@@ -48,10 +48,10 @@ class DashboardController extends Controller
             ->inStock()
             ->sum('purchase_price');
 
-        $totalDue = (float) Invoice::where('tenant_id', $tenantId)
+        $totalDue = (float) (Invoice::where('tenant_id', $tenantId)
             ->whereIn('payment_status', ['partial', 'unpaid'])
-            ->get()
-            ->sum(fn ($inv) => $inv->amount_due);
+            ->selectRaw('SUM(grand_total - amount_paid) as total_due')
+            ->value('total_due') ?? 0.0);
 
         // Recent Invoices (last 10)
         $recentInvoices = Invoice::where('tenant_id', $tenantId)

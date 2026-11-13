@@ -471,7 +471,7 @@
 
                 <!-- Primary Submit Action: Lime Highlight -->
                 <div class="pt-3">
-                    <button type="submit" class="w-full py-3 btn-lime rounded-lg font-bold text-xs sm:text-sm shadow-xs min-h-[44px] flex items-center justify-center gap-2">
+                    <button type="submit" id="submitInvoiceBtn" class="w-full py-3 btn-lime rounded-lg font-bold text-xs sm:text-sm shadow-xs min-h-[44px] flex items-center justify-center gap-2">
                         <span>Generate Bill</span>
                     </button>
                 </div>
@@ -763,6 +763,20 @@
         document.getElementById('scannerModal').classList.add('hidden');
         document.getElementById('scannerModal').classList.remove('flex');
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const invoiceForm = document.querySelector('form[action="{{ route('invoices.store') }}"]');
+        if (invoiceForm) {
+            invoiceForm.addEventListener('submit', function () {
+                const btn = document.getElementById('submitInvoiceBtn');
+                if (btn && !btn.disabled) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    btn.innerHTML = '<span>Processing Bill...</span>';
+                }
+            });
+        }
+    });
 </script>
 @endpush
 @endsection

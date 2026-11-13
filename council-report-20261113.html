@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Council Report · INVOIRY Architecture & Scalability Audit</title>
+    <style>
+        :root {
+            --bg: #F8F9FA;
+            --surface: #FFFFFF;
+            --text-main: #111111;
+            --text-muted: #555555;
+            --border: #E5E7EB;
+            --brand-lime: #80F644;
+            --accent-green: #059669;
+            --accent-amber: #D97706;
+            --accent-red: #DC2626;
+            --accent-blue: #2563EB;
+            --obsidian: #0D0F12;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 32px 16px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .header {
+            background: var(--obsidian);
+            color: #FFFFFF;
+            padding: 32px;
+            border-bottom: 3px solid var(--brand-lime);
+        }
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(128, 246, 68, 0.2);
+            color: var(--brand-lime);
+            margin-bottom: 12px;
+        }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        .meta { font-size: 13px; color: #9CA3AF; }
+        .content { padding: 32px; }
+        .section { margin-bottom: 36px; }
+        .section-title {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-main);
+            border-left: 4px solid var(--brand-lime);
+            padding-left: 12px;
+            margin-bottom: 16px;
+        }
+        .verdict-box {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .verdict-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #166534;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media(max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+        .card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+        .card p { font-size: 13px; color: var(--text-muted); }
+        .tag-agreed { color: #059669; font-weight: 700; font-size: 12px; }
+        .tag-clash { color: #D97706; font-weight: 700; font-size: 12px; }
+        .tag-blindspot { color: #DC2626; font-weight: 700; font-size: 12px; }
+        .action-list { list-style: none; counter-reset: action-counter; }
+        .action-item {
+            counter-increment: action-counter;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        .action-item:last-child { border-bottom: none; }
+        .action-num {
+            background: var(--obsidian);
+            color: #FFFFFF;
+            font-weight: 800;
+            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        details {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            background: #FAFBFB;
+        }
+        summary {
+            padding: 14px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        summary:hover { background: #F9FAFB; }
+        .details-body {
+            padding: 16px 18px;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+        }
+        .footer {
+            padding: 24px 32px;
+            background: #F9FAFB;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <span class="badge">LLM Council Report</span>
+            <h1>INVOIRY · Architecture, Styling & Scalability Audit</h1>
+            <p class="meta">Concurred by 5 Independent Advisors & Chairman • November 13, 2026</p>
+        </header>
+
+        <main class="content">
+            <!-- Chairman Final Verdict -->
+            <section class="section">
+                <div class="verdict-box">
+                    <div class="verdict-title">
+                        <span>✓</span> Chairman's Executive Synthesis & Verdict
+                    </div>
+                    <p style="font-size: 14px; color: #1E293B; margin-bottom: 14px;">
+                        The council unanimously determined that while INVOIRY possesses a rich, functional feature set and clean aesthetic foundation, it suffered from three critical production vulnerabilities: <strong>memory-exhausting Eloquent collection summations</strong>, <strong>an N+1 query multiplication in Khata ledger views</strong>, and <strong>missing row-level concurrency locking on item checkout</strong>. In parallel, the mobile bottom navigation created UX friction for Super Admins.
+                    </p>
+                    <p style="font-size: 13px; color: #334155;">
+                        <strong>Verdict:</strong> Authorize immediate, surgical remediation across all identified layers without breaking existing tests, data structures, or APIs.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Consensus Spectrum Visual -->
+            <section class="section">
+                <h2 class="section-title">Council Consensus Breakdown</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <span class="tag-agreed">UNANIMOUS AGREEMENT</span>
+                        <h3 style="margin-top: 6px;">Database-Level Summation</h3>
+                        <p>Eliminate <code>->get()->sum()</code> in Invoice and Dashboard controllers. Replace with SQL <code>SUM(grand_total - amount_paid)</code> to prevent process memory exhaustion.</p>
+                    </div>
+                    <div class="card">
+                        <span class="tag-agreed">UNANIMOUS AGREEMENT</span>
+                        <h3 style="margin-top: 6px;">Eliminate Khata N+1 Loops</h3>
+                        <p>Refactor <code>CustomerController::index()</code> to use <code>withSum('invoices', 'grand_total')</code> and <code>withSum('invoices', 'amount_paid')</code>, shrinking 45 queries to 1.</p>
+                    </div>
+                    <div class="card">
+                        <span class="tag-blindspot">CRITICAL BLIND SPOT</span>
+                        <h3 style="margin-top: 6px;">Checkout Concurrency Locking</h3>
+                        <p>Use <code>Item::lockForUpdate()</code> during checkout to prevent two store cashiers from double-selling the exact same device at the same instant.</p>
+                    </div>
+                    <div class="card">
+                        <span class="tag-clash">PERSONA STYLING ALIGNMENT</span>
+                        <h3 style="margin-top: 6px;">Persona-Aware Navigation</h3>
+                        <p>Detect Super Admin status in mobile layout to render platform controls (Tenants, Users, Audit) instead of cashier POS buttons.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Implementation Roadmap -->
+            <section class="section">
+                <h2 class="section-title">Action Plan: 6 Immediate Industry-Level Fixes</h2>
+                <ol class="action-list">
+                    <li class="action-item">
+                        <div class="action-num">1</div>
+                        <div>
+                            <strong>Composite Database Performance Indexes:</strong> Add migrations for <code>invoices(tenant_id, invoice_date)</code>, <code>invoices(tenant_id, payment_status)</code>, <code>items(tenant_id, status)</code>, and <code>items(tenant_id, imei_1, imei_2)</code>.
+                        </div>
+                    </li>
+                    <li class="action-item">
+                        <div class="action-num">2</div>
+                        <div>
+                            <strong>Controller Query Tuning & Memory Optimization:</strong> Replace in-memory loops with direct database SQL aggregates in <code>InvoiceController</code> and <code>DashboardController</code>.
+                        </div>
+                    </li>
+                    <li class="action-item">
+                        <div class="action-num">3</div>
+                        <div>
+                            <strong>N+1 Query Resolution on Customer Khata:</strong> Eager load aggregated financial sums with <code>withSum()</code> on Customer listings.
+                        </div>
+                    </li>
+                    <li class="action-item">
+                        <div class="action-num">4</div>
+                        <div>
+                            <strong>Concurrency Row Locking & Dual-IMEI Guards:</strong> Implement <code>lockForUpdate()</code> in checkout and cross-validate dual-SIM IMEIs in inventory inwarding.
+                        </div>
+                    </li>
+                    <li class="action-item">
+                        <div class="action-num">5</div>
+                        <div>
+                            <strong>Audit Trail Protection on Bulk Item Deletion:</strong> Protect sold/billed devices from deletion in <code>ItemController::bulkAction()</code>.
+                        </div>
+                    </li>
+                    <li class="action-item">
+                        <div class="action-num">6</div>
+                        <div>
+                            <strong>Persona-Aware Mobile Navigation & Header Polish:</strong> Adapt the bottom navigation bar for Super Admins and fix the Super Admin header quick action button.
+                        </div>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Collapsible Advisor Arguments -->
+            <section class="section">
+                <h2 class="section-title">Advisor Arguments (Expand to Review)</h2>
+                
+                <details>
+                    <summary>
+                        <span>The Contrarian (Failure Analysis)</span>
+                        <span style="color:#DC2626; font-size:12px;">High Priority</span>
+                    </summary>
+                    <div class="details-body">
+                        Identified concurrency race condition in billing where simultaneous cashier transactions double-sell identical devices without <code>lockForUpdate()</code>. Flagged memory exhaustion from collection-level <code>->get()->sum()</code> and unmonitored bulk deletion of sold items wiping invoice audit trails.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        <span>The First Principles Thinker (Architecture & Ledger)</span>
+                        <span style="color:#2563EB; font-size:12px;">Architecture</span>
+                    </summary>
+                    <div class="details-body">
+                        Emphasized that inventory and Khata are immutable accounting ledgers. Denounced 45 queries per 15 rows in customer ledger loops. Called for database composite indexing to protect tenant isolation query execution plans.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        <span>The Expansionist (Enterprise Scaling)</span>
+                        <span style="color:#059669; font-size:12px;">Opportunities</span>
+                    </summary>
+                    <div class="details-body">
+                        Recommended tag-based caching for system configurations and tenant metadata to reduce read IOPS by 50%. Proposed continuous barcode scanning modes and native thermal ESC/POS receipt standards.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        <span>The Outsider (UX & Visual Hierarchy)</span>
+                        <span style="color:#D97706; font-size:12px;">UX Polish</span>
+                    </summary>
+                    <div class="details-body">
+                        Pointed out persona collision on mobile devices where Super Admins are shown store cashier navigation buttons. Highlighted incomplete button labels ("Add ") and recommended tabular numbers with monospace formatting for currency.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        <span>The Executor (Pragmatic Execution)</span>
+                        <span style="color:#111111; font-size:12px;">Action Plan</span>
+                    </summary>
+                    <div class="details-body">
+                        Synthesized the findings into 6 direct, non-destructive, zero-regression pull requests covering database migrations, query tuning, locking guards, and UI adaptation.
+                    </div>
+                </details>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <span>INVOIRY Multi-Tenant Retail Terminal</span>
+            <span>Generated: 2026-11-13 11:50:00</span>
+        </footer>
+    </div>
+</body>
+</html>

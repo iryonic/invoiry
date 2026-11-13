@@ -781,4 +781,61 @@ class InvoiceSystemTest extends TestCase
         $this->assertEquals('9419998877', $customer->phone);
         $this->assertEquals('VIP Khata member', $customer->notes);
     }
+
+    public function test_dual_sim_cross_column_duplicate_imei_is_prevented(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $existing = Item::where('tenant_id', $user->tenant_id)->inStock()->first();
+
+        // Attempting to inward a phone whose IMEI 1 matches an existing phone's IMEI 1
+        $res1 = $this->actingAs($user)->post(route('items.store'), [
+            'item_name' => 'Duplicate IMEI Phone',
+            'condition' => 'new',
+            'purchase_price' => 50000,
+            'imei_1' => $existing->imei_1,
+        ]);
+        $res1->assertSessionHas('error');
+
+        // Attempting to inward a phone where IMEI 2 matches an existing phone's IMEI 1
+        $res2 = $this->actingAs($user)->post(route('items.store'), [
+            'item_name' => 'Duplicate IMEI 2 Phone',
+            'condition' => 'new',
+            'purchase_price' => 50000,
+            'imei_1' => '999988887777666',
+            'imei_2' => $existing->imei_1,
+        ]);
+        $res2->assertSessionHas('error');
+    }
+
+    public function test_bulk_delete_items_protects_sold_and_invoiced_devices(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $soldItem = Item::where('tenant_id', $user->tenant_id)->sold()->first();
+        $inStockItem = Item::where('tenant_id', $user->tenant_id)->inStock()->first();
+
+        $this->assertNotNull($soldItem);
+        $this->assertNotNull($inStockItem);
+
+        $response = $this->actingAs($user)->post(route('items.bulk'), [
+            'ids' => [$soldItem->id, $inStockItem->id],
+            'action' => 'delete',
+        ]);
+
+        $response->assertRedirect();
+        // Sold item must still exist in DB
+        $this->assertDatabaseHas('items', ['id' => $soldItem->id]);
+        // In-stock item was deleted
+        $this->assertDatabaseMissing('items', ['id' => $inStockItem->id]);
+    }
+
+    public function test_mobile_bottom_nav_renders_superadmin_controls_for_superadmin(): void
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+        $response = $this->actingAs($superAdmin)->get(route('superadmin.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Console');
+        $response->assertSee('Tenants');
+        $response->assertSee('+ Tenant');
+    }
 }

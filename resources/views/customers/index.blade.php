@@ -107,7 +107,7 @@
                     <div class="pt-3 border-t border-[#E6E6E6] flex items-center justify-between text-xs">
                         <div>
                             <span class="text-[10px] text-[#929292] block uppercase tracking-wider font-semibold">Total Purchases</span>
-                            <span class="font-bold text-[#111111] font-mono">₹{{ number_format($spent, 0) }} <span class="text-[10px] font-normal text-[#666666]">({{ $c->invoices->count() }} bills)</span></span>
+                            <span class="font-bold text-[#111111] font-mono">₹{{ number_format($spent, 0) }} <span class="text-[10px] font-normal text-[#666666]">({{ $c->invoices_count ?? $c->invoices->count() }} bills)</span></span>
                         </div>
                         <a href="{{ route('customers.show', $c) }}" class="btn-secondary text-xs px-3 py-1.5 min-h-[36px] inline-flex items-center gap-1">
                             <span>Ledger</span>

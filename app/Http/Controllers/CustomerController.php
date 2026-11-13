@@ -20,7 +20,10 @@ class CustomerController extends Controller
     public function index(Request $request): View
     {
         $tenant = TenantContext::get();
-        $query = Customer::where('tenant_id', $tenant->id)->with('invoices');
+        $query = Customer::where('tenant_id', $tenant->id)
+            ->withCount('invoices')
+            ->withSum('invoices', 'grand_total')
+            ->withSum('invoices', 'amount_paid');
 
         if ($request->filled('search')) {
             $search = trim($request->search);

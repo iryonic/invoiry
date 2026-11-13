@@ -297,7 +297,7 @@
             <a href="{{ route('items.index') }}" class="btn-secondary px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold min-h-[44px] inline-flex items-center">
                 Cancel
             </a>
-            <button type="submit" class="btn-lime px-6 py-2.5 rounded-lg text-xs sm:text-sm font-bold shadow-xs min-h-[44px] active:scale-98 transition">
+            <button type="submit" id="submitItemBtn" class="btn-lime px-6 py-2.5 rounded-lg text-xs sm:text-sm font-bold shadow-xs min-h-[44px] active:scale-98 transition">
                 Save Device to Inventory
             </button>
         </div>
@@ -341,6 +341,20 @@
         document.getElementById('scannerModal').classList.add('hidden');
         document.getElementById('scannerModal').classList.remove('flex');
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const itemForm = document.querySelector('form[action="{{ route('items.store') }}"]');
+        if (itemForm) {
+            itemForm.addEventListener('submit', function () {
+                const btn = document.getElementById('submitItemBtn');
+                if (btn && !btn.disabled) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    btn.innerHTML = '<span>Saving Device...</span>';
+                }
+            });
+        }
+    });
 </script>
 @endpush
 @endsection

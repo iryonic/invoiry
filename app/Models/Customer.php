@@ -50,11 +50,19 @@ class Customer extends Model
 
     public function totalSpent(): float
     {
+        if (isset($this->invoices_sum_grand_total)) {
+            return (float) $this->invoices_sum_grand_total;
+        }
+
         return (float) $this->invoices()->sum('grand_total');
     }
 
     public function totalPaid(): float
     {
+        if (isset($this->invoices_sum_amount_paid)) {
+            return (float) $this->invoices_sum_amount_paid;
+        }
+
         return (float) $this->invoices()->sum('amount_paid');
     }
 

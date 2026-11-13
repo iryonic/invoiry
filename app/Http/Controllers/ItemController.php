@@ -10,6 +10,7 @@ use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -112,54 +113,63 @@ class ItemController extends Controller
 
         $supplierId = $validated['supplier_id'] ?? null;
 
-        // Check for duplicate in-stock IMEI
-        if (! empty($validated['imei_1'])) {
-            $existing = Item::where('tenant_id', $tenant->id)
+        // Robust Dual-SIM Cross-Column Duplicate IMEI check in active inventory
+        $imeisToCheck = array_values(array_filter([$validated['imei_1'] ?? null, $validated['imei_2'] ?? null]));
+        if (! empty($imeisToCheck)) {
+            $existingImei = Item::where('tenant_id', $tenant->id)
                 ->where('status', 'in_stock')
-                ->where('imei_1', $validated['imei_1'])
-                ->exists();
-            if ($existing) {
-                return back()->withInput()->with('error', "Device with IMEI '{$validated['imei_1']}' is already present in active store inventory.");
+                ->where(function ($q) use ($imeisToCheck) {
+                    $q->whereIn('imei_1', $imeisToCheck)
+                        ->orWhereIn('imei_2', $imeisToCheck);
+                })
+                ->first();
+
+            if ($existingImei) {
+                $matchedImei = in_array($existingImei->imei_1, $imeisToCheck, true) ? $existingImei->imei_1 : $existingImei->imei_2;
+
+                return back()->withInput()->with('error', "Device with IMEI '{$matchedImei}' ({$existingImei->item_name}) is already present in active store inventory.");
             }
         }
 
         try {
-            // If new supplier details provided, create supplier on the fly
-            if (! $supplierId && ! empty($validated['new_supplier_name'])) {
-                $supplier = Supplier::create([
+            return DB::transaction(function () use ($tenant, $validated, $supplierId) {
+                // If new supplier details provided, create supplier on the fly
+                if (! $supplierId && ! empty($validated['new_supplier_name'])) {
+                    $supplier = Supplier::create([
+                        'tenant_id' => $tenant->id,
+                        'name' => $validated['new_supplier_name'],
+                        'phone' => $validated['new_supplier_phone'] ?? null,
+                        'id_proof_number' => $validated['new_supplier_adhar'] ?? null,
+                        'address' => $validated['new_supplier_address'] ?? null,
+                    ]);
+                    $supplierId = $supplier->id;
+                }
+
+                Item::create([
                     'tenant_id' => $tenant->id,
-                    'name' => $validated['new_supplier_name'],
-                    'phone' => $validated['new_supplier_phone'] ?? null,
-                    'id_proof_number' => $validated['new_supplier_adhar'] ?? null,
-                    'address' => $validated['new_supplier_address'] ?? null,
+                    'supplier_id' => $supplierId,
+                    'item_name' => $validated['item_name'],
+                    'brand' => $validated['brand'] ?? null,
+                    'category' => $validated['category'] ?? 'Mobile',
+                    'storage' => $validated['storage'] ?? null,
+                    'color' => $validated['color'] ?? null,
+                    'specs' => $validated['specs'] ?? null,
+                    'imei_1' => $validated['imei_1'] ?? null,
+                    'imei_2' => $validated['imei_2'] ?? null,
+                    'serial_number' => $validated['serial_number'] ?? null,
+                    'condition' => $validated['condition'],
+                    'status' => 'in_stock',
+                    'purchase_price' => $validated['purchase_price'],
+                    'selling_price' => $validated['selling_price'] ?? null,
+                    'warranty_status' => $validated['warranty_status'],
+                    'warranty_expiry_date' => $validated['warranty_expiry_date'] ?? null,
+                    'purchase_date' => $validated['purchase_date'],
+                    'payment_method' => $validated['payment_method'],
+                    'remark' => $validated['remark'] ?? null,
                 ]);
-                $supplierId = $supplier->id;
-            }
 
-            Item::create([
-                'tenant_id' => $tenant->id,
-                'supplier_id' => $supplierId,
-                'item_name' => $validated['item_name'],
-                'brand' => $validated['brand'] ?? null,
-                'category' => $validated['category'] ?? 'Mobile',
-                'storage' => $validated['storage'] ?? null,
-                'color' => $validated['color'] ?? null,
-                'specs' => $validated['specs'] ?? null,
-                'imei_1' => $validated['imei_1'] ?? null,
-                'imei_2' => $validated['imei_2'] ?? null,
-                'serial_number' => $validated['serial_number'] ?? null,
-                'condition' => $validated['condition'],
-                'status' => 'in_stock',
-                'purchase_price' => $validated['purchase_price'],
-                'selling_price' => $validated['selling_price'] ?? null,
-                'warranty_status' => $validated['warranty_status'],
-                'warranty_expiry_date' => $validated['warranty_expiry_date'] ?? null,
-                'purchase_date' => $validated['purchase_date'],
-                'payment_method' => $validated['payment_method'],
-                'remark' => $validated['remark'] ?? null,
-            ]);
-
-            return redirect()->route('items.index')->with('success', 'Device successfully added to inventory!');
+                return redirect()->route('items.index')->with('success', 'Device successfully added to inventory!');
+            });
         } catch (\Throwable $e) {
             Log::error('Item inward failed: '.$e->getMessage());
 
@@ -223,8 +233,8 @@ class ItemController extends Controller
         $tenant = TenantContext::get();
         abort_if($item->tenant_id !== $tenant->id, 403);
 
-        if ($item->status === 'sold') {
-            return back()->with('error', 'Cannot delete an item that has already been sold. Delete the corresponding invoice first.');
+        if ($item->invoiceItem()->exists()) {
+            return back()->with('error', 'Cannot delete an item that has already been billed on a customer invoice.');
         }
 
         $item->delete();
@@ -288,9 +298,25 @@ class ItemController extends Controller
         }
 
         if ($validated['action'] === 'delete') {
-            $itemsQuery->delete();
-            AuditLog::record('item.bulk_deleted', "Bulk deleted {$count} stock items", $tenant->id, auth()->id());
-            $msg = "{$count} devices removed from inventory.";
+            $items = $itemsQuery->withCount('invoiceItems')->get();
+            $deletedCount = 0;
+            $skippedCount = 0;
+
+            foreach ($items as $item) {
+                if ($item->invoice_items_count > 0) {
+                    $skippedCount++;
+
+                    continue;
+                }
+                $item->delete();
+                $deletedCount++;
+            }
+
+            AuditLog::record('item.bulk_deleted', "Bulk deleted {$deletedCount} stock items. Skipped {$skippedCount} billed items.", $tenant->id, auth()->id());
+            $msg = "{$deletedCount} device(s) removed from inventory.";
+            if ($skippedCount > 0) {
+                $msg .= " ({$skippedCount} device(s) linked to customer invoices were protected from deletion).";
+            }
         } elseif ($validated['action'] === 'mark_sold') {
             $itemsQuery->update(['status' => 'sold']);
             AuditLog::record('item.bulk_marked_sold', "Bulk marked {$count} items as sold", $tenant->id, auth()->id());

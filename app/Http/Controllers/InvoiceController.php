@@ -63,9 +63,9 @@ class InvoiceController extends Controller
 
         $stats = [
             'total_invoices' => Invoice::where('tenant_id', $tenant->id)->count(),
-            'total_sales' => Invoice::where('tenant_id', $tenant->id)->sum('grand_total'),
-            'total_collected' => Invoice::where('tenant_id', $tenant->id)->sum('amount_paid'),
-            'total_due' => Invoice::where('tenant_id', $tenant->id)->whereIn('payment_status', ['partial', 'unpaid'])->get()->sum->amount_due,
+            'total_sales' => (float) Invoice::where('tenant_id', $tenant->id)->sum('grand_total'),
+            'total_collected' => (float) Invoice::where('tenant_id', $tenant->id)->sum('amount_paid'),
+            'total_due' => (float) (Invoice::where('tenant_id', $tenant->id)->whereIn('payment_status', ['partial', 'unpaid'])->selectRaw('SUM(grand_total - amount_paid) as total_due')->value('total_due') ?? 0.0),
         ];
 
         return view('invoices.index', compact('invoices', 'stats'));
@@ -251,7 +251,7 @@ class InvoiceController extends Controller
                     $purchaseCost = 0.00;
                     $stockItem = null;
                     if (! empty($itemInput['item_id'])) {
-                        $stockItem = Item::where('tenant_id', $tenant->id)->find($itemInput['item_id']);
+                        $stockItem = Item::where('tenant_id', $tenant->id)->lockForUpdate()->find($itemInput['item_id']);
                         if ($stockItem) {
                             if ($stockItem->status === 'sold') {
                                 throw new DomainException("Device '{$stockItem->item_name}' (IMEI: {$stockItem->imei_1}) has already been sold on another invoice.");
