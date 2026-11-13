@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="UTF-8">
     <title>{{ $settings['document_title'] ?? 'INVOIRY Features & Pricing' }}</title>
     <style>
@@ -678,11 +679,11 @@
 
                             <div style="text-align: center; border-bottom: 1px solid #EEEEEE; padding-bottom: 6px; margin-bottom: 6px;">
                                 <h3 style="font-size: 10.5pt; font-weight: bold; color: #111111; margin: 0 0 2px 0;">{{ $plan->name }}</h3>
-                                <div style="font-size: 15pt; font-weight: bold; color: {{ $plan->is_popular ? '#111111' : '#111111' }}; font-family: monospace;">
-                                    {{ $plan->price }}
+                                <div style="font-size: 15pt; font-weight: bold; color: #111111; font-family: 'DejaVu Sans', sans-serif;">
+                                    {!! $plan->formatted_price !!}
                                 </div>
-                                <div style="font-size: 6.5pt; color: #666666; font-weight: bold;">
-                                    {{ $plan->period }}
+                                <div style="font-size: 6.5pt; color: #666666; font-weight: bold; font-family: 'DejaVu Sans', sans-serif;">
+                                    {!! $plan->formatted_period !!}
                                 </div>
                             </div>
 

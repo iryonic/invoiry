@@ -26,4 +26,20 @@ class BrochurePlan extends Model
         'is_enabled' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * Get HTML-safe price string with the Indian Rupee entity for PDF rendering.
+     */
+    public function getFormattedPriceAttribute(): string
+    {
+        return str_replace(['₹', 'Rs.', 'INR '], ['&#8377;', '&#8377;', '&#8377;'], (string) ($this->price ?? ''));
+    }
+
+    /**
+     * Get HTML-safe period string with the Indian Rupee entity for PDF rendering.
+     */
+    public function getFormattedPeriodAttribute(): string
+    {
+        return str_replace(['₹', 'Rs.', 'INR '], ['&#8377;', '&#8377;', '&#8377;'], (string) ($this->period ?? ''));
+    }
 }

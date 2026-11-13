@@ -98,26 +98,53 @@
         hidePageLoader();
     }, config.maxTime || 3500);
 
-    // Smooth page-changing transition threshold (Only real page navigations)
+    // Smooth page-changing transition threshold (Strictly only real page navigations)
     document.addEventListener('click', (e) => {
+        // Exclude all buttons, form controls, and pseudo-buttons
+        if (e.target.closest('button, input[type="submit"], input[type="button"], [role="button"], [type="reset"]')) {
+            return;
+        }
+
         const link = e.target.closest('a');
         if (!link) return;
+
+        // Skip non-standard clicks (new tab, middle click, modified keys)
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+        // Skip if default was already prevented
+        if (e.defaultPrevented) return;
 
         const href = link.getAttribute('href');
         if (!href || href === '#' || href.startsWith('#') || href.startsWith('javascript:')) return;
         if (link.target && link.target !== '_self') return;
         if (link.hasAttribute('download') || link.hasAttribute('data-no-loader')) return;
         if (link.getAttribute('role') === 'button' || link.hasAttribute('onclick') || link.dataset.modal || link.dataset.confirm || link.dataset.action) return;
-        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
-        if (href.includes('/pdf') || href.includes('/print') || href.includes('/thermal') || href.includes('download')) {
+        // Skip file downloads, exports, prints, thermal slips, and PDFs
+        const lowerHref = href.toLowerCase();
+        if (
+            lowerHref.includes('/pdf') ||
+            lowerHref.includes('/print') ||
+            lowerHref.includes('/thermal') ||
+            lowerHref.includes('/download') ||
+            lowerHref.includes('/export') ||
+            lowerHref.includes('download') ||
+            lowerHref.includes('export') ||
+            lowerHref.endsWith('.pdf') ||
+            lowerHref.endsWith('.csv') ||
+            lowerHref.endsWith('.xlsx') ||
+            lowerHref.endsWith('.zip')
+        ) {
             return;
         }
 
         try {
             const url = new URL(link.href, window.location.origin);
             if (url.origin !== window.location.origin) return;
-            if (url.pathname === window.location.pathname && url.search === window.location.search) {
+
+            // ONLY activate for genuine page-to-page transitions (different pathname)
+            // Filters, queries, search parameters, pagination on the same page DO NOT trigger loader
+            if (url.pathname === window.location.pathname) {
                 return;
             }
         } catch {
@@ -129,11 +156,7 @@
             if (!e.defaultPrevented) {
                 showPageLoader();
             }
-        }, 220);
-    });
-
-    window.addEventListener('beforeunload', () => {
-        showPageLoader();
+        }, 200);
     });
 })();
 

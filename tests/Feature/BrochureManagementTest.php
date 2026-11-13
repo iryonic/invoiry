@@ -244,6 +244,7 @@ class BrochureManagementTest extends TestCase
         $response->assertSee('Rapid POS Billing');
         $response->assertSee('Dual-SIM IMEI');
         $response->assertSee('Professional Retail Pro');
+        $response->assertSee('&#8377;499', false);
     }
 
     /**
