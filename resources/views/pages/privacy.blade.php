@@ -8,7 +8,7 @@
 <div class="space-y-6">
 
     <!-- Hero Card -->
-    <div class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+    <div class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
         <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#ECFDF3] border border-[#A6F4C5] text-[#027A48] text-xs font-mono font-bold">
             <span class="w-2 h-2 rounded-full bg-[#079455] animate-pulse"></span>
             <span>DATA PROTECTION STANDARD &bull; UPDATED {{ date('F Y') }}</span>
@@ -38,7 +38,7 @@
     <div class="space-y-6">
 
         <!-- Section 1 -->
-        <section id="section-1" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-1" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>01.</span>
                 <span>Scope & Multi-Tenant Operating Model</span>
@@ -53,7 +53,7 @@
         </section>
 
         <!-- Section 2 -->
-        <section id="section-2" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-2" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>02.</span>
                 <span>Information Architecture</span>
@@ -107,7 +107,7 @@
         </section>
 
         <!-- Section 3 -->
-        <section id="section-3" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-3" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>03.</span>
                 <span>Camera & Optical Barcode Engine</span>
@@ -124,7 +124,7 @@
         </section>
 
         <!-- Section 4 -->
-        <section id="section-4" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-4" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>04.</span>
                 <span>Statutory Compliance & GST Records</span>
@@ -136,7 +136,7 @@
         </section>
 
         <!-- Section 5 -->
-        <section id="section-5" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-5" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>05.</span>
                 <span>Security & Infrastructure</span>
@@ -159,7 +159,7 @@
         </section>
 
         <!-- Section 6 -->
-        <section id="section-6" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="section-6" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#079455] uppercase tracking-wider">
                 <span>06.</span>
                 <span>Tenant Governance</span>

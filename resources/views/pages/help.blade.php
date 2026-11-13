@@ -8,7 +8,7 @@
 <div class="space-y-8">
 
     <!-- Hero Header -->
-    <div class="card-surface p-6 sm:p-10 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <div class="card-surface p-4 sm:p-10 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center gap-2 flex-wrap">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#050505] text-[#B7FF00] text-xs font-mono font-bold tracking-wide">
                 <span class="w-2 h-2 rounded-full bg-[#B7FF00] animate-pulse"></span>
@@ -54,7 +54,7 @@
     </div>
 
     <!-- MODULE 1: QUICK START -->
-    <section id="module-quickstart" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-quickstart" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">01</div>
@@ -63,7 +63,6 @@
                     <p class="text-xs text-[#666666]">Essential steps before generating your first customer invoice</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#079455] bg-[#ECFDF3] px-2.5 py-1 rounded-full border border-[#A6F4C5]">INITIAL SETUP</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -91,7 +90,7 @@
     </section>
 
     <!-- MODULE 2: INVENTORY & STOCK -->
-    <section id="module-inventory" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-inventory" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">02</div>
@@ -100,7 +99,6 @@
                     <p class="text-xs text-[#666666]">Managing incoming inventory, IMEI 1 & 2 validation, and barcode scanning</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#175CD3] bg-[#EFF8FF] px-2.5 py-1 rounded-full border border-[#B2DDFF]">INVENTORY</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -120,7 +118,7 @@
     </section>
 
     <!-- MODULE 3: POS BILLING ENGINE -->
-    <section id="module-billing" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-billing" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">03</div>
@@ -129,7 +127,6 @@
                     <p class="text-xs text-[#666666]">Generating customer bills, cash vs credit sales, and real-time calculation</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#B45309] bg-[#FFFBEB] px-2.5 py-1 rounded-full border border-[#FDE68A]">CORE BILLING</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -158,7 +155,7 @@
     </section>
 
     <!-- MODULE 4: GST ENGINE -->
-    <section id="module-gst" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-gst" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">04</div>
@@ -167,7 +164,6 @@
                     <p class="text-xs text-[#666666]">Intra-State (CGST + SGST) vs Inter-State (IGST) and MRP Inclusive Math</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#079455] bg-[#ECFDF3] px-2.5 py-1 rounded-full border border-[#A6F4C5]">TAX COMPLIANCE</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -201,7 +197,7 @@
     </section>
 
     <!-- MODULE 5: THERMAL PRINTING -->
-    <section id="module-printing" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-printing" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">05</div>
@@ -210,7 +206,6 @@
                     <p class="text-xs text-[#666666]">A4 Tax Invoices, 80mm & 58mm POS thermal slips, and WhatsApp sharing</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#666666] bg-[#F2F4F7] px-2.5 py-1 rounded-full border border-[#EAECF0]">HARDWARE POS</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -238,7 +233,7 @@
     </section>
 
     <!-- MODULE 6: KHATA CREDIT LEDGER -->
-    <section id="module-khata" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-khata" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">06</div>
@@ -247,7 +242,6 @@
                     <p class="text-xs text-[#666666]">Managing credit balances, partial payments, and ledger settlement</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#D97706] bg-[#FFFBEB] px-2.5 py-1 rounded-full border border-[#FDE68A]">CREDIT LEDGER</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -262,7 +256,7 @@
     </section>
 
     <!-- MODULE 7: STAFF & ROLES -->
-    <section id="module-rbac" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-rbac" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">07</div>
@@ -271,7 +265,6 @@
                     <p class="text-xs text-[#666666]">Restricting cashier access, configuring form visibility, and managing permissions</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#111111] bg-[#F7F7F6] px-2.5 py-1 rounded-full border border-[#E6E6E6]">RBAC SECURITY</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">
@@ -299,7 +292,7 @@
     </section>
 
     <!-- MODULE 8: SECURITY & LOCK -->
-    <section id="module-security" class="card-surface p-6 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
+    <section id="module-security" class="card-surface p-4 sm:p-8 space-y-4 border border-[#E6E6E6] shadow-2xs">
         <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-black text-sm">08</div>
@@ -308,7 +301,6 @@
                     <p class="text-xs text-[#666666]">Protecting counters, password toggles, and platform maintenance mode</p>
                 </div>
             </div>
-            <span class="text-[11px] font-mono font-bold text-[#DC2626] bg-[#FEF2F2] px-2.5 py-1 rounded-full border border-[#FECACA]">SECURITY</span>
         </div>
 
         <div class="space-y-4 text-xs sm:text-sm text-[#444444] leading-relaxed">

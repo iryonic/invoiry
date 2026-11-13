@@ -393,6 +393,12 @@ class AuthController extends Controller
             request()->session()->regenerate();
             request()->session()->forget('terminal_locked');
 
+            if ($redirect = request()->query('redirect')) {
+                if (str_starts_with($redirect, '/')) {
+                    return redirect($redirect);
+                }
+            }
+
             if ($user->isSuperAdmin()) {
                 return redirect()->route('superadmin.index')->with('success', "Logged in as {$user->name} (Platform Super Admin)");
             }

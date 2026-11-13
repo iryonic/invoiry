@@ -9,6 +9,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\SuperAdmin\BrochureController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,7 @@ Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [PageController::class, 'terms'])->name('terms');
 Route::get('/help', [PageController::class, 'help'])->name('help');
 Route::get('/documentation', [PageController::class, 'help'])->name('docs');
+Route::get('/features-pricing-brochure.pdf', [BrochureController::class, 'publicDownload'])->name('brochure.public-download');
 
 /*
 |--------------------------------------------------------------------------
@@ -103,6 +105,23 @@ Route::middleware(['auth'])->group(function () {
         // Platform System Settings
         Route::get('/settings', [SuperAdminController::class, 'settingsIndex'])->name('settings.index');
         Route::put('/settings', [SuperAdminController::class, 'settingsUpdate'])->name('settings.update');
+
+        // Dynamic Features & Pricing Brochure Management
+        Route::get('/brochure', [BrochureController::class, 'index'])->name('brochure.index');
+        Route::post('/brochure/settings', [BrochureController::class, 'updateSettings'])->name('brochure.settings.update');
+        Route::post('/brochure/modules', [BrochureController::class, 'storeModule'])->name('brochure.modules.store');
+        Route::put('/brochure/modules/{module}', [BrochureController::class, 'updateModule'])->name('brochure.modules.update');
+        Route::delete('/brochure/modules/{module}', [BrochureController::class, 'destroyModule'])->name('brochure.modules.destroy');
+        Route::post('/brochure/modules/reorder', [BrochureController::class, 'reorderModules'])->name('brochure.modules.reorder');
+        Route::post('/brochure/screenshots', [BrochureController::class, 'storeScreenshot'])->name('brochure.screenshots.store');
+        Route::put('/brochure/screenshots/{screenshot}', [BrochureController::class, 'updateScreenshot'])->name('brochure.screenshots.update');
+        Route::delete('/brochure/screenshots/{screenshot}', [BrochureController::class, 'destroyScreenshot'])->name('brochure.screenshots.destroy');
+        Route::post('/brochure/plans', [BrochureController::class, 'storePlan'])->name('brochure.plans.store');
+        Route::put('/brochure/plans/{plan}', [BrochureController::class, 'updatePlan'])->name('brochure.plans.update');
+        Route::delete('/brochure/plans/{plan}', [BrochureController::class, 'destroyPlan'])->name('brochure.plans.destroy');
+        Route::get('/brochure/preview', [BrochureController::class, 'preview'])->name('brochure.preview');
+        Route::post('/brochure/generate', [BrochureController::class, 'generate'])->name('brochure.generate');
+        Route::get('/brochure/download', [BrochureController::class, 'download'])->name('brochure.download');
     });
 
     // Tenant App Routes

@@ -16,7 +16,7 @@
         <div>
             <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#ECFDF3] text-[#027A48] mb-1 border border-[#A6F4C5]">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#079455]"></span>
-                <span>Active Business Store</span>
+                <span>Active </span>
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-[#111111] tracking-tight">{{ $tenant->name }}</h1>
             <p class="text-xs sm:text-sm text-[#666666]">Configure granular feature access and customize transaction form input fields</p>

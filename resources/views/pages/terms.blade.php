@@ -8,7 +8,7 @@
 <div class="space-y-6">
 
     <!-- Hero Card -->
-    <div class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+    <div class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
         <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#EFF8FF] border border-[#B2DDFF] text-[#175CD3] text-xs font-mono font-bold">
             <span class="w-2 h-2 rounded-full bg-[#175CD3] animate-pulse"></span>
             <span>MASTER SERVICE AGREEMENT &bull; EFFECTIVE {{ date('F Y') }}</span>
@@ -38,7 +38,7 @@
     <div class="space-y-6">
 
         <!-- 1 -->
-        <section id="term-1" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-1" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>01.</span>
                 <span>Acceptance & Subscription Terms</span>
@@ -50,7 +50,7 @@
         </section>
 
         <!-- 2 -->
-        <section id="term-2" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-2" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>02.</span>
                 <span>Terminal Credentials & Account Security</span>
@@ -67,7 +67,7 @@
         </section>
 
         <!-- 3 -->
-        <section id="term-3" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-3" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>03.</span>
                 <span>Hardware Serialization & Verification</span>
@@ -83,7 +83,7 @@
         </section>
 
         <!-- 4 -->
-        <section id="term-4" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-4" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>04.</span>
                 <span>Tax Engine & Fiscal Compliance</span>
@@ -98,7 +98,7 @@
         </section>
 
         <!-- 5 -->
-        <section id="term-5" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-5" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>05.</span>
                 <span>Customer Khata (Credit Ledger)</span>
@@ -110,7 +110,7 @@
         </section>
 
         <!-- 6 -->
-        <section id="term-6" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-6" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>06.</span>
                 <span>Thermal Hardware & ESC/POS Formatting</span>
@@ -122,7 +122,7 @@
         </section>
 
         <!-- 7 -->
-        <section id="term-7" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-7" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>07.</span>
                 <span>SLA & Maintenance Windows</span>
@@ -134,7 +134,7 @@
         </section>
 
         <!-- 8 -->
-        <section id="term-8" class="card-surface p-6 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
+        <section id="term-8" class="card-surface p-4 sm:p-8 space-y-3 border border-[#E6E6E6] shadow-2xs">
             <div class="flex items-center gap-2 text-xs font-bold font-mono text-[#175CD3] uppercase tracking-wider">
                 <span>08.</span>
                 <span>Limitation of Liability</span>
