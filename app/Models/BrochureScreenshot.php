@@ -69,4 +69,20 @@ class BrochureScreenshot extends Model
 
         return null;
     }
+
+    /**
+     * Resolve base64 data URI for reliable embedding.
+     */
+    public function getBase64Attribute(): ?string
+    {
+        $path = $this->absolute_path;
+        if ($path && file_exists($path)) {
+            $mime = mime_content_type($path) ?: 'image/png';
+            $data = file_get_contents($path);
+
+            return 'data:'.$mime.';base64,'.base64_encode($data);
+        }
+
+        return null;
+    }
 }

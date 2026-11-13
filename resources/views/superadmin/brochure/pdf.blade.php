@@ -298,13 +298,14 @@
         <!-- Featured Application Visual Preview -->
         @php
             $heroScreenshot = $screenshots->firstWhere('title', 'Point of Sale & Rapid Billing Checkout') ?? $screenshots->first();
+            $heroSrc = ($isPdf ?? false) ? ($heroScreenshot?->base64 ?? $heroScreenshot?->absolute_path ?? $heroScreenshot?->url) : $heroScreenshot?->url;
         @endphp
-        @if($heroScreenshot && $heroScreenshot->absolute_path)
+        @if($heroScreenshot && $heroSrc)
             <div style="border: 1px solid #D1D5DB; border-radius: 6px; overflow: hidden; background: #000; margin-bottom: 12px;">
                 <div style="background: #111111; color: #ffffff; padding: 4px 10px; font-size: 7pt; font-weight: bold;">
                     LIVE PRODUCTION INTERFACE PREVIEW — {{ $heroScreenshot->title }}
                 </div>
-                <img src="{{ $heroScreenshot->absolute_path }}" style="width: 100%; height: auto; max-height: 180px; display: block;" alt="INVOIRY POS Screenshot">
+                <img src="{{ $heroSrc }}" style="width: 100%; height: auto; max-height: 180px; display: block;" alt="INVOIRY POS Screenshot">
             </div>
         @endif
 
@@ -604,9 +605,12 @@
                                 <div style="background-color: #111111; color: #ffffff; padding: 5px 8px; font-size: 7.5pt; font-weight: bold; border-bottom: 1px solid #000;">
                                     {{ $shot->title }}
                                 </div>
-                                @if($shot->absolute_path)
+                                @php
+                                    $shotSrc = ($isPdf ?? false) ? ($shot->base64 ?? $shot->absolute_path ?? $shot->url) : $shot->url;
+                                @endphp
+                                @if($shotSrc)
                                     <div style="background: #F2F4F7; text-align: center; max-height: 145px; overflow: hidden;">
-                                        <img src="{{ $shot->absolute_path }}" style="width: 100%; height: auto; max-height: 145px; display: block;" alt="{{ $shot->title }}">
+                                        <img src="{{ $shotSrc }}" style="width: 100%; height: auto; max-height: 145px; display: block;" alt="{{ $shot->title }}">
                                     </div>
                                 @endif
                                 <div style="padding: 6px 8px; font-size: 7pt; color: #555555; line-height: 1.35; background: #FAFAFA; border-top: 1px solid #E6E6E6;">

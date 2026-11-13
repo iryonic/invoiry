@@ -365,6 +365,7 @@ class BrochureController extends Controller
     public function preview(): View
     {
         $data = $this->collectBrochureData();
+        $data['isPdf'] = false;
 
         return view('superadmin.brochure.pdf', $data);
     }
@@ -375,6 +376,7 @@ class BrochureController extends Controller
     public function generate(Request $request): RedirectResponse
     {
         $data = $this->collectBrochureData();
+        $data['isPdf'] = true;
         $version = $data['settings']['version'] ?? '1.0.0';
 
         // Increment patch version if requested
@@ -438,6 +440,7 @@ class BrochureController extends Controller
 
         // Generate on the fly if not yet compiled
         $data = $this->collectBrochureData();
+        $data['isPdf'] = true;
         $pdf = Pdf::loadView('superadmin.brochure.pdf', $data)
             ->setPaper('a4', 'portrait')
             ->setOption([
