@@ -328,7 +328,7 @@ body.preloader-active {
 .loader {
     --color-1: #80F644;
     --color-2: #fff;
-    --size: 1.15px;
+    --size: 1px;
 
     width: calc(50 * var(--size));
     height: calc(165 * var(--size));
@@ -346,7 +346,8 @@ body.preloader-active {
     height: calc(16 * var(--size));
     background: var(--color-1);
     border-radius: 50%;
-    animation: bounce 2s linear infinite;
+    animation: invoiry-ball-bounce 2s linear infinite;
+    will-change: transform, height;
 }
 
 .loader::after {
@@ -360,10 +361,11 @@ body.preloader-active {
     width: calc(48 * var(--size));
     background: var(--color-2);
     border-radius: calc(4 * var(--size));
-    animation: rotate 2s linear infinite;
+    animation: invoiry-square-rotate 2s linear infinite;
+    will-change: transform;
 }
 
-@keyframes bounce {
+@keyframes invoiry-ball-bounce {
     0%, 50%, 100% {
         transform: translate(-50%, 0);
         height: calc(20 * var(--size));
@@ -390,7 +392,7 @@ body.preloader-active {
     }
 }
 
-@keyframes rotate {
+@keyframes invoiry-square-rotate {
     0%, 50%, 100% {
         transform: rotate(0deg);
     }

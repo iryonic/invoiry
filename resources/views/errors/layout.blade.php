@@ -18,7 +18,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full bg-[#D5DDC8] selection:bg-[#111111] selection:text-[#B7FF00] flex flex-col justify-center items-center p-4 sm:p-6" style="overflow-x: clip;">
+<body class="min-h-full @yield('body-bg', 'bg-white') selection:bg-[#111111] selection:text-[#B7FF00] flex flex-col justify-center items-center p-4 sm:p-6" style="overflow-x: clip;">
     <x-page-loader />
 
     <div class="w-full max-w-lg bg-white rounded-3xl border border-[#E6E6E6] shadow-xl p-8 sm:p-10 space-y-6 text-center">
@@ -54,23 +54,29 @@
         @endif
 
         <!-- Action CTAs (Responsive) -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
-            @hasSection('primary-action')
-                @yield('primary-action')
-            @else
-                <a href="{{ auth()->check() ? (auth()->user()->isSuperAdmin() ? route('superadmin.index') : route('dashboard')) : route('login') }}"
-                   class="btn-lime w-full sm:w-auto min-h-[44px] text-xs font-bold inline-flex items-center justify-center gap-2 shadow-xs">
-                    <svg class="w-4 h-4 text-[#101010]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <span>Return to Dashboard</span>
-                </a>
-            @endif
+        @hasSection('custom-actions')
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+                @yield('custom-actions')
+            </div>
+        @else
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+                @hasSection('primary-action')
+                    @yield('primary-action')
+                @else
+                    <a href="{{ auth()->check() ? (auth()->user()->isSuperAdmin() ? route('superadmin.index') : route('dashboard')) : route('login') }}"
+                       class="btn-lime w-full sm:w-auto min-h-[44px] text-xs font-bold inline-flex items-center justify-center gap-2 shadow-xs">
+                        <svg class="w-4 h-4 text-[#101010]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        <span>Return to Dashboard</span>
+                    </a>
+                @endif
 
-            <button type="button" onclick="window.history.back()"
-                class="btn-secondary w-full sm:w-auto min-h-[44px] text-xs inline-flex items-center justify-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                <span>Previous Screen</span>
-            </button>
-        </div>
+                <button type="button" onclick="window.history.back()"
+                    class="btn-secondary w-full sm:w-auto min-h-[44px] text-xs inline-flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <span>Previous Screen</span>
+                </button>
+            </div>
+        @endif
 
         <!-- Terminal Diagnostics Footnote -->
         <div class="pt-4 border-t border-[#E6E6E6] text-[11px] text-[#929292] font-mono flex items-center justify-between">

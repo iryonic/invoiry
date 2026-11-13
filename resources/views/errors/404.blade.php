@@ -1,6 +1,6 @@
 @extends('errors.layout')
 
-@section('title', '404 Not Found')
+@section('title', '404 Not Found · ' . config('app.name', 'INVOIRY'))
 @section('code-label', '404 NOT FOUND')
 @section('dot-color', 'bg-[#DC2626]')
 
@@ -16,10 +16,5 @@
 {{ $exception?->getMessage() ?: 'The requested invoice, device, customer ledger, or URL route could not be found on this store terminal.' }}
 @endsection
 
-@section('guidance')
-<div class="flex items-start gap-2">
-    <span class="font-bold text-[#111111] shrink-0 font-mono">DIAGNOSTIC:</span>
-    <span>The record may have been deleted, moved to another store partition, or the link may have expired.</span>
-</div>
-@endsection
+
 

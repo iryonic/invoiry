@@ -18,13 +18,13 @@ class CheckMaintenanceMode
     public function handle(Request $request, Closure $next): Response
     {
         if (SystemSetting::isEnabled('maintenance_mode', false)) {
-            // 1. Allow Super Admin users full access
+            // 1. Authenticated Super Admins have full access to work on the system and revoke maintenance mode
             if (auth()->check() && auth()->user()->isSuperAdmin()) {
                 return $next($request);
             }
 
-            // 2. Allow login/logout and superadmin control routes so Super Admin can access platform controls
-            if ($request->routeIs('login') || $request->routeIs('logout') || $request->is('superadmin*')) {
+            // 2. Only login and logout routes are accessible so Super Admin can sign in
+            if ($request->routeIs('login') || $request->routeIs('logout') || $request->is('login') || $request->is('logout')) {
                 return $next($request);
             }
 
@@ -36,7 +36,7 @@ class CheckMaintenanceMode
                 ], 503);
             }
 
-            // 4. Render dedicated 503 maintenance page
+            // 4. Render dedicated 503 maintenance page for all other requests
             return response()->view('errors.503', [], 503);
         }
 

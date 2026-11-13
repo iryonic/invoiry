@@ -38,9 +38,9 @@
                         <span class="font-mono text-xs uppercase tracking-widest font-black text-white">INVOIRY</span>
                     </div>
 
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-mono text-[#B7FF00] border border-white/5">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 text-[10px] font-mono text-[#B7FF00] border border-white/5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#B7FF00] animate-pulse"></span>
-                        <span>INVOIRY {{ \App\Models\SystemSetting::get('app_version', 'v1.0.0') }}</span>
+                        <span>{{ \App\Models\SystemSetting::get('app_version', 'v1.0.0') }}</span>
                     </span>
                 </div>
 
@@ -91,9 +91,9 @@
             <div class="relative pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-[#929292] font-mono">
                 <span class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-[#B7FF00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    <span>256-bit AES Tenant Isolation</span>
+                    <span>256-bit AES </span>
                 </span>
-                <span>99.98% SLA</span>
+                <span>99.9% Uptime</span>
             </div>
         </div>
 
@@ -105,7 +105,7 @@
                 <div class="space-y-1">
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F7F7F6] border border-[#E6E6E6] text-[11px] font-bold text-[#111111] mb-2 font-mono">
                         <span class="w-2 h-2 rounded-full bg-[#B7FF00] border border-[#111111]"></span>
-                        <span>SECURE TERMINAL ACCESS</span>
+                        <span>INVOIRY ERP</span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Sign In</h1>
                     <p class="text-xs sm:text-sm text-[#666666]">Enter your registered credentials or select an evaluation role.</p>
@@ -214,7 +214,7 @@
 
             <!-- Terminal Footnote -->
             <div class="mt-8 text-center text-[11px] text-[#929292] font-mono">
-                <span>Hardware Barcode Scanner &bull; Thermal ESC/POS &bull; Dynamic UPI QR</span>
+                <span> &copy; Invoiry All rights reserved {{ date('Y') }} </span>
             </div>
         </div>
     </div>

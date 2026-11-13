@@ -170,15 +170,33 @@ class PlatformEnhancementsTest extends TestCase
         $tenantUser = User::where('role', 'tenant_admin')->first();
         $superAdmin = User::where('role', 'super_admin')->first();
 
-        // Regular user receives 503
+        // 1. Unauthenticated guest can access login page
+        auth()->logout();
+        $loginRes = $this->get(route('login'));
+        $loginRes->assertStatus(200);
+
+        // 2. Unauthenticated guest accessing register or dashboard is blocked with 503
+        $registerRes = $this->get(route('register'));
+        $registerRes->assertStatus(503);
+        $registerRes->assertSee('Login to Terminal');
+        $registerRes->assertDontSee('Check Availability');
+        $registerRes->assertDontSee('Previous Screen');
+
+        // 3. Regular logged-in user receives 503 on workspace
         $blockedRes = $this->actingAs($tenantUser)->get(route('dashboard'));
         $blockedRes->assertStatus(503);
         $blockedRes->assertSee('Upgrading Cloud Servers');
         $blockedRes->assertSee('Emergency maintenance in progress.');
+        $blockedRes->assertDontSee('Check Availability');
+        $blockedRes->assertDontSee('Previous Screen');
 
-        // Super Admin bypasses maintenance mode
+        // 4. Super Admin bypasses maintenance mode completely to work on the system
         $allowedRes = $this->actingAs($superAdmin)->get(route('superadmin.index'));
         $allowedRes->assertStatus(200);
+
+        // 5. Super Admin can access settings to revoke maintenance mode
+        $settingsRes = $this->actingAs($superAdmin)->get(route('superadmin.settings.index'));
+        $settingsRes->assertStatus(200);
 
         // Reset maintenance mode
         SystemSetting::set('maintenance_mode', '0', 'system');
@@ -201,7 +219,7 @@ class PlatformEnhancementsTest extends TestCase
         auth()->logout();
         $loginRes = $this->get(route('login'));
         $loginRes->assertStatus(200);
-        $loginRes->assertSee('INVOIRY v2.8.4-pro');
+        $loginRes->assertSee('v2.8.4-pro');
 
         // 2. Verify in Global Footer
         $tenantUser = User::where('role', 'tenant_admin')->first();

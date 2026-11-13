@@ -17,7 +17,7 @@
             <p class="text-xs sm:text-sm text-[#666666]">Modify subscription tier, contact information, and store tax identity</p>
         </div>
         <a href="{{ route('superadmin.tenants.show', $tenant) }}" class="btn-secondary min-h-[38px] text-xs inline-flex items-center gap-1.5">
-            &larr; Back to Details
+            Back to Details
         </a>
     </div>
 

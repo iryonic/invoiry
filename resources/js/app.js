@@ -98,7 +98,7 @@
         hidePageLoader();
     }, config.maxTime || 3500);
 
-    // Smooth navigation threshold
+    // Smooth page-changing transition threshold (Only real page navigations)
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (!link) return;
@@ -107,6 +107,7 @@
         if (!href || href === '#' || href.startsWith('#') || href.startsWith('javascript:')) return;
         if (link.target && link.target !== '_self') return;
         if (link.hasAttribute('download') || link.hasAttribute('data-no-loader')) return;
+        if (link.getAttribute('role') === 'button' || link.hasAttribute('onclick') || link.dataset.modal || link.dataset.confirm || link.dataset.action) return;
         if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
         if (href.includes('/pdf') || href.includes('/print') || href.includes('/thermal') || href.includes('download')) {
@@ -128,24 +129,11 @@
             if (!e.defaultPrevented) {
                 showPageLoader();
             }
-        }, 120);
+        }, 220);
     });
 
-    // Form submission preloader trigger
-    document.addEventListener('submit', (e) => {
-        const form = e.target;
-        if (!form || form.target === '_blank' || form.hasAttribute('data-no-loader')) return;
-
-        if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
-            return;
-        }
-
-        if (navTimer) clearTimeout(navTimer);
-        navTimer = setTimeout(() => {
-            if (!e.defaultPrevented) {
-                showPageLoader();
-            }
-        }, 60);
+    window.addEventListener('beforeunload', () => {
+        showPageLoader();
     });
 })();
 

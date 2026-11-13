@@ -18,7 +18,7 @@
         </div>
 
         <a href="{{ route('superadmin.index') }}" class="btn-secondary self-start sm:self-auto text-xs min-h-[40px]">
-            &larr; Back to Platform Console
+            Back to Console
         </a>
     </div>
 
