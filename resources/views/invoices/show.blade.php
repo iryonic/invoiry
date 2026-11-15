@@ -43,6 +43,19 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                 <span class="whitespace-nowrap">WhatsApp</span>
             </a>
+            <button type="button" onclick="openSendInvoiceMailModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#050505] text-[#B7FF00] hover:bg-black rounded-lg text-xs font-bold shadow-2xs min-h-[40px] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                <span class="whitespace-nowrap">Email Bill</span>
+            </button>
+            @if($invoice->amount_due > 0)
+                <form method="POST" action="{{ route('invoices.mail.reminder', $invoice) }}" class="inline" onsubmit="return confirm('Send payment reminder email to customer ({{ $customer->email ?: $customer->name }})?');">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg text-xs shadow-2xs min-h-[40px] transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        <span class="whitespace-nowrap">Email Reminder</span>
+                    </button>
+                </form>
+            @endif
             @if($invoice->payment_status !== 'paid')
                 <button type="button" onclick="document.getElementById('paymentModal').classList.remove('hidden')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-[#B7FF00] rounded-lg text-xs font-bold shadow-2xs min-h-[40px] transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -415,6 +428,114 @@
             </div>
         </div>
     @endif
+
+    {{-- Send Invoice Email Modal --}}
+    <div id="sendInvoiceMailModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00] border border-[#050505]"></span>
+                    <h3 class="text-sm font-bold text-[#050505]">Email Bill &bull; {{ $invoice->invoice_number }}</h3>
+                </div>
+                <button type="button" onclick="closeSendInvoiceMailModal()" class="text-[#888888] hover:text-[#050505]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('invoices.mail.send', $invoice) }}" class="space-y-4">
+                @csrf
+                <input type="hidden" name="template_id" id="mailTemplateId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-[#050505] mb-1">Customer Email <span class="text-red-500">*</span></label>
+                        <input type="email" name="recipient_email" id="mailRecipientEmail" value="{{ $customer->email }}" required placeholder="customer@domain.com"
+                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs font-mono text-[#050505] focus:outline-none focus:border-[#050505]">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#050505] mb-1">Recipient Name</label>
+                        <input type="text" name="recipient_name" id="mailRecipientName" value="{{ $customer->name }}"
+                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs text-[#050505] focus:outline-none focus:border-[#050505]">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#050505] mb-1">Email Subject <span class="text-red-500">*</span></label>
+                    <input type="text" name="subject" id="mailSubject" value="Tax Invoice {{ $invoice->invoice_number }} from {{ $tenant->name }}" required
+                        class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs font-semibold text-[#050505] focus:outline-none focus:border-[#050505]">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#050505] mb-1">Message Body (HTML)</label>
+                    <textarea name="body_html" id="mailBodyHtml" rows="5" required
+                        class="w-full p-3 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs font-mono text-[#050505] focus:outline-none focus:border-[#050505] leading-relaxed"></textarea>
+                </div>
+
+                {{-- Attachment Badge --}}
+                <div class="p-3 bg-[#F7F7F6] rounded-xl border border-[#E6E6E6] flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-[10px] uppercase font-mono">
+                            PDF
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-[#050505]">Invoice_{{ $invoice->invoice_number }}.pdf</span>
+                            <span class="text-[10px] text-[#888888] block">Dynamically generated official tax invoice with UPI QR</span>
+                        </div>
+                    </div>
+
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="attach_pdf" value="1" checked class="w-4 h-4 rounded border-[#E6E6E6] text-[#050505] focus:ring-0">
+                        <span class="text-xs font-semibold text-[#050505]">Attach PDF</span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#E6E6E6]">
+                    <button type="button" onclick="closeSendInvoiceMailModal()" class="px-4 py-2 text-xs font-semibold text-[#666666] hover:text-[#050505]">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-[#050505] text-[#B7FF00] hover:bg-black text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/></svg>
+                        <span>Queue & Deliver Now</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function openSendInvoiceMailModal() {
+        document.getElementById('sendInvoiceMailModal').classList.remove('hidden');
+
+        // Fetch pre-rendered template preview
+        fetch('{{ route("invoices.mail.preview", $invoice) }}')
+            .then(res => res.json())
+            .then(data => {
+                if (data.recipient_email) {
+                    document.getElementById('mailRecipientEmail').value = data.recipient_email;
+                }
+                if (data.recipient_name) {
+                    document.getElementById('mailRecipientName').value = data.recipient_name;
+                }
+                if (data.subject) {
+                    document.getElementById('mailSubject').value = data.subject;
+                }
+                if (data.body_html) {
+                    document.getElementById('mailBodyHtml').value = data.body_html;
+                }
+                if (data.template_id) {
+                    document.getElementById('mailTemplateId').value = data.template_id;
+                }
+            })
+            .catch(err => {
+                console.error('Error prefetching mail preview:', err);
+            });
+    }
+
+    function closeSendInvoiceMailModal() {
+        document.getElementById('sendInvoiceMailModal').classList.add('hidden');
+    }
+    </script>
 
 </div>
 @endsection

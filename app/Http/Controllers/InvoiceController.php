@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\EmailAutomation;
+use App\Models\EmailLog;
+use App\Models\EmailTemplate;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\StockAdjustment;
 use App\Services\DynamicFormConfig;
+use App\Services\MailService;
 use App\Services\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
@@ -427,6 +431,44 @@ class InvoiceController extends Controller
                 }
 
                 AuditLog::record('invoice.created', "Generated invoice {$invoiceNumber} ({$status}) for customer {$customer->name} (Total: ₹{$grandTotal})", $tenant->id, auth()->id());
+
+                // Automated email dispatch on finalize
+                if ($status === 'finalized' && ! empty($customer->email)) {
+                    try {
+                        $automation = EmailAutomation::where(function ($q) use ($tenant) {
+                            $q->where('tenant_id', $tenant->id)->orWhereNull('tenant_id');
+                        })
+                            ->where('event_name', EmailAutomation::EVENT_INVOICE_FINALIZED)
+                            ->where('is_enabled', true)
+                            ->first();
+
+                        if ($automation) {
+                            $mailService = app(MailService::class);
+                            $template = $automation->template ?? EmailTemplate::where('code', 'invoice_generated')->first();
+                            $placeholders = $mailService->buildPlaceholderData($tenant, $customer, $invoice);
+                            $subject = $template ? $mailService->renderPlaceholders($template->subject, $placeholders) : "Tax Invoice #{$invoice->invoice_number}";
+                            $bodyHtml = $template ? $mailService->renderPlaceholders($template->body_html, $placeholders) : "<p>Invoice #{$invoice->invoice_number} is attached.</p>";
+                            $attachments = [$mailService->generateInvoiceAttachment($invoice)];
+
+                            $mailService->queueEmail([
+                                'tenant_id' => $tenant->id,
+                                'user_id' => auth()->id(),
+                                'customer_id' => $customer->id,
+                                'invoice_id' => $invoice->id,
+                                'template_id' => $template?->id,
+                                'category' => 'invoices',
+                                'recipient_email' => $customer->email,
+                                'recipient_name' => $customer->name,
+                                'subject' => $subject,
+                                'body_html' => $bodyHtml,
+                                'attachments' => $attachments,
+                                'status' => EmailLog::STATUS_QUEUED,
+                            ]);
+                        }
+                    } catch (Throwable $mailErr) {
+                        Log::warning('Auto invoice email trigger failed: '.$mailErr->getMessage());
+                    }
+                }
 
                 $successMsg = $status === 'draft'
                     ? "Draft invoice {$invoiceNumber} saved! Items and pricing are securely retained."
@@ -909,6 +951,48 @@ class InvoiceController extends Controller
 
             AuditLog::record('payment.recorded', "Recorded payment of ₹{$validated['amount']} for Invoice {$invoice->invoice_number}", $tenant->id, auth()->id());
         });
+
+        // Automated payment confirmation email
+        $customer = $invoice->customer;
+        if ($customer && ! empty($customer->email)) {
+            try {
+                $automation = EmailAutomation::where(function ($q) use ($tenant) {
+                    $q->where('tenant_id', $tenant->id)->orWhereNull('tenant_id');
+                })
+                    ->where('event_name', EmailAutomation::EVENT_PAYMENT_CREATED)
+                    ->where('is_enabled', true)
+                    ->first();
+
+                if ($automation) {
+                    $mailService = app(MailService::class);
+                    $template = $automation->template ?? EmailTemplate::where('code', 'payment_received')->first();
+                    $extra = [
+                        'payment_amount' => '₹'.number_format($validated['amount'], 2),
+                        'payment_date' => now()->format('d M Y, h:i A'),
+                        'payment_method' => ucfirst(str_replace('_', ' ', $method)),
+                    ];
+                    $placeholders = $mailService->buildPlaceholderData($tenant, $customer, $invoice, $extra);
+                    $subject = $template ? $mailService->renderPlaceholders($template->subject, $placeholders) : "Payment Confirmation for Invoice #{$invoice->invoice_number}";
+                    $bodyHtml = $template ? $mailService->renderPlaceholders($template->body_html, $placeholders) : "<p>Payment of {$extra['payment_amount']} recorded.</p>";
+
+                    $mailService->queueEmail([
+                        'tenant_id' => $tenant->id,
+                        'user_id' => auth()->id(),
+                        'customer_id' => $customer->id,
+                        'invoice_id' => $invoice->id,
+                        'template_id' => $template?->id,
+                        'category' => 'payments',
+                        'recipient_email' => $customer->email,
+                        'recipient_name' => $customer->name,
+                        'subject' => $subject,
+                        'body_html' => $bodyHtml,
+                        'status' => EmailLog::STATUS_QUEUED,
+                    ]);
+                }
+            } catch (Throwable $mailErr) {
+                Log::warning('Auto payment receipt email trigger failed: '.$mailErr->getMessage());
+            }
+        }
 
         return back()->with('success', 'Payment recorded successfully!');
     }

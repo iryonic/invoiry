@@ -4,7 +4,15 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InvoiceMailController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\MailAutomationController;
+use App\Http\Controllers\MailComposeController;
+use App\Http\Controllers\MailDashboardController;
+use App\Http\Controllers\MailLogController;
+use App\Http\Controllers\MailScheduledController;
+use App\Http\Controllers\MailSettingController;
+use App\Http\Controllers\MailTemplateController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
@@ -162,6 +170,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{invoice}/thermal', [InvoiceController::class, 'thermal'])->name('invoices.thermal')->middleware('permission:invoices.print');
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment')->middleware('permission:invoices.record_payments');
     Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store')->middleware('permission:invoices.record_payments');
+    Route::get('/invoices/{invoice}/preview-email', [InvoiceMailController::class, 'preview'])->name('invoices.mail.preview')->middleware('permission:invoices.view');
+    Route::post('/invoices/{invoice}/send-email', [InvoiceMailController::class, 'send'])->name('invoices.mail.send')->middleware('permission:invoices.view');
+    Route::post('/invoices/{invoice}/payments/{payment}/send-receipt', [InvoiceMailController::class, 'sendReceipt'])->name('invoices.mail.receipt')->middleware('permission:invoices.view');
+    Route::post('/invoices/{invoice}/send-reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.mail.reminder')->middleware('permission:invoices.view');
+    Route::post('/invoices/{invoice}/reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.send-reminder')->middleware('permission:invoices.view');
 
     // Customers & Khata
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:customers.view');
@@ -189,6 +202,49 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/settings', [SettingController::class, 'update'])->name('settings.update')->middleware('permission:settings.manage');
         Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.password');
         Route::post('/settings/logout-other-devices', [AuthController::class, 'logoutOtherDevices'])->name('settings.logout-other-devices');
+
+        // Centralized Mailing System
+        Route::prefix('mail')->name('mail.')->group(function () {
+            Route::get('/', [MailDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/compose', [MailComposeController::class, 'create'])->name('compose');
+            Route::post('/send', [MailComposeController::class, 'send'])->name('send');
+            Route::post('/preview', [MailComposeController::class, 'preview'])->name('preview');
+
+            // Templates
+            Route::get('/templates', [MailTemplateController::class, 'index'])->name('templates.index');
+            Route::get('/templates/create', [MailTemplateController::class, 'create'])->name('templates.create');
+            Route::post('/templates', [MailTemplateController::class, 'store'])->name('templates.store');
+            Route::get('/templates/{template}/edit', [MailTemplateController::class, 'edit'])->name('templates.edit');
+            Route::put('/templates/{template}', [MailTemplateController::class, 'update'])->name('templates.update');
+            Route::post('/templates/{template}/duplicate', [MailTemplateController::class, 'duplicate'])->name('templates.duplicate');
+            Route::delete('/templates/{template}', [MailTemplateController::class, 'destroy'])->name('templates.destroy');
+            Route::get('/templates/{template}/preview', [MailTemplateController::class, 'preview'])->name('templates.preview');
+
+            // Delivery Logs
+            Route::get('/logs', [MailLogController::class, 'index'])->name('logs.index');
+            Route::get('/logs/{log}', [MailLogController::class, 'show'])->name('logs.show');
+            Route::post('/logs/{log}/retry', [MailLogController::class, 'retry'])->name('logs.retry');
+            Route::delete('/logs/{log}', [MailLogController::class, 'destroy'])->name('logs.destroy');
+
+            // Scheduled Emails
+            Route::get('/scheduled', [MailScheduledController::class, 'index'])->name('scheduled.index');
+            Route::post('/scheduled/{log}/cancel', [MailScheduledController::class, 'cancel'])->name('scheduled.cancel');
+            Route::post('/scheduled/{log}/dispatch-now', [MailScheduledController::class, 'dispatchNow'])->name('scheduled.dispatch');
+
+            // SMTP & Provider Settings
+            Route::get('/settings', [MailSettingController::class, 'index'])->name('settings.index');
+            Route::post('/settings', [MailSettingController::class, 'store'])->name('settings.store');
+            Route::put('/settings/{setting}', [MailSettingController::class, 'update'])->name('settings.update');
+            Route::delete('/settings/{setting}', [MailSettingController::class, 'destroy'])->name('settings.destroy');
+            Route::post('/settings/test-connection', [MailSettingController::class, 'testConnection'])->name('settings.test-connection');
+            Route::post('/settings/send-test', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test');
+            Route::post('/settings/{setting}/toggle', [MailSettingController::class, 'toggle'])->name('settings.toggle');
+            Route::post('/settings/{setting}/set-default', [MailSettingController::class, 'setDefault'])->name('settings.set-default');
+
+            // Automations
+            Route::get('/automations', [MailAutomationController::class, 'index'])->name('automations.index');
+            Route::post('/automations', [MailAutomationController::class, 'update'])->name('automations.update');
+        });
     });
 
     // POS Terminal Lock Screen & Quick Unlock

@@ -445,5 +445,7 @@ class DatabaseSeeder extends Seeder
             'ip_address' => '127.0.0.1',
             'created_at' => now()->subHour(),
         ]);
+
+        $this->call(EmailTemplateSeeder::class);
     }
 }
