@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Models\StockAdjustment;
 use App\Services\DynamicFormConfig;
 use App\Services\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -247,10 +248,14 @@ class InvoiceController extends Controller
                     $igst = 0.00;
                 }
 
+                $status = ($request->input('action') === 'draft' || $request->input('status') === 'draft') ? 'draft' : 'finalized';
+                $invoiceNumber = $tenant->generateNextInvoiceNumber();
+
                 // Line items data preparation
                 $itemsData = [];
                 foreach ($validated['items'] as $itemInput) {
                     $unitPrice = (float) $itemInput['selling_price'];
+                    $itemQty = max(1, (int) ($itemInput['quantity'] ?? 1));
 
                     // Check purchase cost if linked to inventory Item
                     $purchaseCost = 0.00;
@@ -262,6 +267,56 @@ class InvoiceController extends Controller
                                 throw new DomainException("Device '{$stockItem->item_name}' (IMEI: {$stockItem->imei_1}) has already been sold on another invoice.");
                             }
                             $purchaseCost = (float) $stockItem->purchase_price;
+                        }
+                    } else {
+                        // Check if device with matching IMEI 1 or Serial Number already exists in the catalogue
+                        $imei1 = ! empty($itemInput['imei_1']) ? trim($itemInput['imei_1']) : null;
+                        $serial = ! empty($itemInput['serial_number']) ? trim($itemInput['serial_number']) : null;
+
+                        if ($imei1) {
+                            $stockItem = Item::where('tenant_id', $tenant->id)->where('imei_1', $imei1)->lockForUpdate()->first();
+                        }
+                        if (! $stockItem && $serial) {
+                            $stockItem = Item::where('tenant_id', $tenant->id)->where('serial_number', $serial)->lockForUpdate()->first();
+                        }
+
+                        // Auto-catalogue new device into the items inventory catalogue
+                        if (! $stockItem) {
+                            $stockItem = Item::create([
+                                'tenant_id' => $tenant->id,
+                                'item_name' => $itemInput['item_name'],
+                                'brand' => $itemInput['brand'] ?? (explode(' ', trim($itemInput['item_name']))[0] ?? null),
+                                'storage' => $itemInput['storage'] ?? null,
+                                'color' => $itemInput['color'] ?? null,
+                                'specs' => $itemInput['specs'] ?? null,
+                                'imei_1' => $imei1,
+                                'imei_2' => ! empty($itemInput['imei_2']) ? trim($itemInput['imei_2']) : null,
+                                'serial_number' => $serial,
+                                'condition' => 'brand_new',
+                                'status' => 'in_stock',
+                                'purchase_price' => 0.00,
+                                'selling_price' => $unitPrice,
+                                'warranty_status' => $itemInput['warranty_status'] ?? 'no_warranty',
+                                'warranty_expiry_date' => $itemInput['warranty_expiry_date'] ?? null,
+                                'purchase_date' => $validated['invoice_date'] ?? now()->toDateString(),
+                                'quantity' => $itemQty,
+                                'is_device' => true,
+                                'remark' => "Auto-catalogued during billing ({$invoiceNumber})",
+                            ]);
+
+                            StockAdjustment::create([
+                                'tenant_id' => $tenant->id,
+                                'item_id' => $stockItem->id,
+                                'user_id' => auth()->id(),
+                                'invoice_id' => null,
+                                'adjustment_type' => 'manual',
+                                'quantity_change' => $itemQty,
+                                'quantity_before' => 0,
+                                'quantity_after' => $itemQty,
+                                'reason' => 'Auto-catalogued from billing form',
+                            ]);
+
+                            AuditLog::record('item.auto_catalogued', "Device {$stockItem->item_name} automatically catalogued from invoice {$invoiceNumber}", $tenant->id, auth()->id());
                         }
                     }
 
@@ -286,7 +341,7 @@ class InvoiceController extends Controller
                         'imei_2' => $itemInput['imei_2'] ?? $stockItem?->imei_2,
                         'serial_number' => $itemInput['serial_number'] ?? $stockItem?->serial_number,
                         'hsn_sac' => '8517',
-                        'quantity' => 1,
+                        'quantity' => $itemQty,
                         'unit_price' => $unitPrice,
                         'purchase_cost' => $purchaseCost,
                         'tax_rate' => $taxRate,
@@ -306,16 +361,12 @@ class InvoiceController extends Controller
                     $amountPaid = isset($validated['amount_paid']) && $validated['amount_paid'] !== '' ? (float) $validated['amount_paid'] : 0.00;
                 }
 
-                $status = ($request->input('action') === 'draft' || $request->input('status') === 'draft') ? 'draft' : 'finalized';
-
                 $paymentStatus = 'paid';
                 if ($amountPaid <= 0) {
                     $paymentStatus = 'unpaid';
                 } elseif ($amountPaid < $grandTotal) {
                     $paymentStatus = 'partial';
                 }
-
-                $invoiceNumber = $tenant->generateNextInvoiceNumber();
 
                 // 3. Create Invoice
                 $invoice = Invoice::create([
@@ -633,11 +684,63 @@ class InvoiceController extends Controller
                 $newItemIds = [];
                 foreach ($validated['items'] as $itemInput) {
                     $unitPrice = (float) $itemInput['selling_price'];
+                    $itemQty = max(1, (int) ($itemInput['quantity'] ?? 1));
                     $stockItem = null;
                     $purchaseCost = 0.00;
 
                     if (! empty($itemInput['item_id'])) {
                         $stockItem = Item::where('tenant_id', $tenant->id)->lockForUpdate()->find($itemInput['item_id']);
+                        if ($stockItem) {
+                            $newItemIds[] = (int) $stockItem->id;
+                            $purchaseCost = (float) $stockItem->purchase_price;
+                        }
+                    } else {
+                        $imei1 = ! empty($itemInput['imei_1']) ? trim($itemInput['imei_1']) : null;
+                        $serial = ! empty($itemInput['serial_number']) ? trim($itemInput['serial_number']) : null;
+
+                        if ($imei1) {
+                            $stockItem = Item::where('tenant_id', $tenant->id)->where('imei_1', $imei1)->lockForUpdate()->first();
+                        }
+                        if (! $stockItem && $serial) {
+                            $stockItem = Item::where('tenant_id', $tenant->id)->where('serial_number', $serial)->lockForUpdate()->first();
+                        }
+
+                        if (! $stockItem) {
+                            $stockItem = Item::create([
+                                'tenant_id' => $tenant->id,
+                                'item_name' => $itemInput['item_name'],
+                                'brand' => $itemInput['brand'] ?? (explode(' ', trim($itemInput['item_name']))[0] ?? null),
+                                'storage' => $itemInput['storage'] ?? null,
+                                'color' => $itemInput['color'] ?? null,
+                                'specs' => $itemInput['specs'] ?? null,
+                                'imei_1' => $imei1,
+                                'imei_2' => ! empty($itemInput['imei_2']) ? trim($itemInput['imei_2']) : null,
+                                'serial_number' => $serial,
+                                'condition' => 'brand_new',
+                                'status' => 'in_stock',
+                                'purchase_price' => 0.00,
+                                'selling_price' => $unitPrice,
+                                'warranty_status' => $itemInput['warranty_status'] ?? 'no_warranty',
+                                'warranty_expiry_date' => $itemInput['warranty_expiry_date'] ?? null,
+                                'purchase_date' => $validated['invoice_date'] ?? now()->toDateString(),
+                                'quantity' => $itemQty,
+                                'is_device' => true,
+                                'remark' => "Auto-catalogued during edit of Invoice {$invoice->invoice_number}",
+                            ]);
+
+                            StockAdjustment::create([
+                                'tenant_id' => $tenant->id,
+                                'item_id' => $stockItem->id,
+                                'user_id' => auth()->id(),
+                                'invoice_id' => null,
+                                'adjustment_type' => 'manual',
+                                'quantity_change' => $itemQty,
+                                'quantity_before' => 0,
+                                'quantity_after' => $itemQty,
+                                'reason' => 'Auto-catalogued from invoice edit form',
+                            ]);
+                        }
+
                         if ($stockItem) {
                             $newItemIds[] = (int) $stockItem->id;
                             $purchaseCost = (float) $stockItem->purchase_price;
@@ -665,7 +768,7 @@ class InvoiceController extends Controller
                         'imei_2' => $itemInput['imei_2'] ?? $stockItem?->imei_2,
                         'serial_number' => $itemInput['serial_number'] ?? $stockItem?->serial_number,
                         'hsn_sac' => '8517',
-                        'quantity' => 1,
+                        'quantity' => $itemQty,
                         'unit_price' => $unitPrice,
                         'purchase_cost' => $purchaseCost,
                         'tax_rate' => $taxRate,

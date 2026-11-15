@@ -6,7 +6,7 @@
 
 :root {
     /* Exact Tokens from design.md */
-    --color-backdrop: #d5ddc8;
+    --color-backdrop: #f7f7f6;
     --color-sidebar: #050505;
     --color-sidebar-text: #e7e7e7;
     --color-sidebar-muted: #929292;
@@ -35,7 +35,7 @@
 html,
 body {
     overflow-x: clip;
-    background-color: var(--color-backdrop);
+    background-color: var(--color-workspace);
     color: var(--color-primary-text);
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;

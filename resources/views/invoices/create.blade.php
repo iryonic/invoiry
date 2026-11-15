@@ -214,12 +214,18 @@
 
         <!-- 2. Line Items Container & Centralized Barcode Scanner -->
         <div class="card-surface p-5 sm:p-6 space-y-4 shadow-2xs">
-            <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
-                <h3 class="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-2">
-                    <svg class="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                    <span>Line Items to Sell</span>
-                </h3>
-                <button type="button" onclick="addItemRow()" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 min-h-[36px]">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E6E6E6] pb-3">
+                <div>
+                    <h3 class="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <span>Line Items to Sell</span>
+                    </h3>
+                    <p class="text-[11px] text-[#079455] font-medium flex items-center gap-1 mt-0.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Devices added here are automatically saved into your Device Catalogue & Stock Inventory.</span>
+                    </p>
+                </div>
+                <button type="button" onclick="addItemRow()" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 min-h-[36px] self-start sm:self-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span>Add Item</span>
                 </button>

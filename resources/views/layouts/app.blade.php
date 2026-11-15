@@ -19,7 +19,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full text-[#111111] selection:bg-[#B7FF00] selection:text-[#101010] bg-[#F7F7F6] lg:bg-[#D5DDC8] flex flex-col justify-center items-center" style="overflow-x: clip;">
+<body class="h-full text-[#111111] selection:bg-[#B7FF00] selection:text-[#101010] bg-[#F7F7F6] overflow-hidden" style="overflow-x: clip;">
 
     <x-page-loader />
 
@@ -99,13 +99,13 @@
     </div>
 
     <!-- Main Outer Container / Desktop Shell -->
-    <div class="w-full h-full lg:p-0 flex flex-col {{ $isImpersonating ? 'pt-7' : '' }}">
+    <div class="w-full h-full flex flex-col {{ $isImpersonating ? 'pt-7' : '' }}">
         
         <!-- Application Frame -->
-        <div class="w-full h-full flex flex-row bg-[#F7F7F6] lg:shadow-xl lg:border lg:border-[#E6E6E6] overflow-hidden">
+        <div class="flex-1 flex flex-row min-h-0 bg-[#F7F7F6] overflow-hidden">
 
             <!-- Desktop Sidebar: #050505 Fixed-feeling Navigation Rail -->
-            <aside class="hidden lg:flex flex-col w-56 xl:w-60 bg-[#050505] text-[#E7E7E7] flex-shrink-0 select-none border-r border-[#1a1a1a]">
+            <aside class="hidden lg:flex flex-col w-56 xl:w-60 bg-[#050505] text-[#E7E7E7] flex-shrink-0 select-none border-r border-[#1a1a1a] h-full">
                 
                 <!-- Brand Area -->
                 <div class="p-4 xl:p-5 border-b border-white/10 flex items-center gap-3">
@@ -157,7 +157,7 @@
             </aside>
 
             <!-- Main Workspace Area -->
-            <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#F7F7F6]">
+            <div class="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-hidden bg-[#F7F7F6]">
 
                 <!-- Top Header: Compact #FFFFFF Bar across workspace -->
                 <header class="h-14 lg:h-16 bg-[#FFFFFF] border-b border-[#E6E6E6] px-4 sm:px-6 flex items-center justify-between flex-shrink-0 z-10">
@@ -274,7 +274,7 @@
                 </script>
 
                 <!-- Workspace Scrollable Body -->
-                <main class="flex-1 p-4 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col justify-between pb-24 lg:pb-6" style="overflow-x: clip;">
+                <main class="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col justify-between pb-24 lg:pb-6">
                     <div class="flex-1 min-w-0">
                         @yield('content')
                     </div>

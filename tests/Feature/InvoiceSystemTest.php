@@ -1126,4 +1126,138 @@ class InvoiceSystemTest extends TestCase
         $this->assertEquals($item->id, $data2[0]['id']);
         $this->assertEquals('imei_2', $data2[0]['matched_field']);
     }
+
+    public function test_new_device_added_during_invoice_creation_is_auto_saved_to_catalogue(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $imei = '999888777666555';
+        $serial = 'SN-AUTO-CAT-001';
+
+        // 1. Finalized bill with brand new device details
+        $resp = $this->actingAs($user)->post('/invoices', [
+            'status' => 'finalized',
+            'customer_name' => 'Auto Catalogue Buyer',
+            'customer_phone' => '9876500001',
+            'customer_state' => 'Jammu and Kashmir',
+            'customer_state_code' => '01',
+            'payment_method' => 'cash',
+            'invoice_date' => now()->toDateString(),
+            'items' => [
+                [
+                    'item_name' => 'Samsung Galaxy S24 Ultra 512GB',
+                    'storage' => '512GB',
+                    'color' => 'Titanium Gray',
+                    'imei_1' => $imei,
+                    'imei_2' => '999888777666556',
+                    'serial_number' => $serial,
+                    'quantity' => 1,
+                    'selling_price' => 125000,
+                    'warranty_status' => 'company_warranty',
+                    'warranty_expiry_date' => now()->addYear()->toDateString(),
+                    'notes' => 'Direct counter walk-in sale',
+                ],
+            ],
+            'amount_paid' => '125000',
+        ]);
+
+        $resp->assertRedirect();
+
+        // Verify device was auto-created in items table (Device Catalogue)
+        $cataloguedItem = Item::where('tenant_id', $user->tenant_id)->where('imei_1', $imei)->first();
+        $this->assertNotNull($cataloguedItem, 'Device was not saved into the catalogue items table.');
+        $this->assertEquals('Samsung Galaxy S24 Ultra 512GB', $cataloguedItem->item_name);
+        $this->assertEquals('512GB', $cataloguedItem->storage);
+        $this->assertEquals('Titanium Gray', $cataloguedItem->color);
+        $this->assertEquals($serial, $cataloguedItem->serial_number);
+        $this->assertEquals('sold', $cataloguedItem->status);
+        $this->assertEquals(0, $cataloguedItem->quantity);
+
+        // Verify it shows up on the device catalogue page
+        $catalogueResp = $this->actingAs($user)->get('/items?status=sold&search='.$imei);
+        $catalogueResp->assertOk();
+        $catalogueResp->assertSee('Samsung Galaxy S24 Ultra');
+        $catalogueResp->assertSee($imei);
+
+        // 2. Draft bill with brand new device details stays in_stock in catalogue
+        $draftImei = '111222333444555';
+        $respDraft = $this->actingAs($user)->post('/invoices', [
+            'status' => 'draft',
+            'customer_name' => 'Draft Customer',
+            'customer_phone' => '9876500002',
+            'customer_state' => 'Jammu and Kashmir',
+            'customer_state_code' => '01',
+            'payment_method' => 'cash',
+            'invoice_date' => now()->toDateString(),
+            'items' => [
+                [
+                    'item_name' => 'OnePlus 12 256GB Flowy Emerald',
+                    'storage' => '256GB',
+                    'color' => 'Flowy Emerald',
+                    'imei_1' => $draftImei,
+                    'serial_number' => 'OP12-DRAFT-99',
+                    'quantity' => 1,
+                    'selling_price' => 64999,
+                    'warranty_status' => 'store_warranty',
+                ],
+            ],
+            'amount_paid' => '',
+        ]);
+
+        $respDraft->assertRedirect();
+        $draftItem = Item::where('tenant_id', $user->tenant_id)->where('imei_1', $draftImei)->first();
+        $this->assertNotNull($draftItem);
+        $this->assertEquals('in_stock', $draftItem->status);
+        $this->assertEquals(1, $draftItem->quantity);
+
+        // Verify draft item shows up in in_stock catalogue
+        $draftCatalogueResp = $this->actingAs($user)->get('/items?status=in_stock&search='.$draftImei);
+        $draftCatalogueResp->assertOk();
+        $draftCatalogueResp->assertSee('OnePlus 12 256GB Flowy Emerald');
+        $draftCatalogueResp->assertSee($draftImei);
+    }
+
+    public function test_device_added_during_invoice_editing_is_auto_saved_to_catalogue(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $invoice = Invoice::where('tenant_id', $user->tenant_id)->where('status', 'finalized')->first();
+        $this->assertNotNull($invoice);
+
+        $newImei = '555444333222111';
+
+        $resp = $this->actingAs($user)->put('/invoices/'.$invoice->id, [
+            'status' => 'finalized',
+            'customer_name' => 'Existing Customer',
+            'customer_phone' => '9876543210',
+            'customer_state' => 'Jammu and Kashmir',
+            'customer_state_code' => '01',
+            'payment_method' => 'cash',
+            'invoice_date' => now()->toDateString(),
+            'items' => [
+                [
+                    'item_name' => 'Google Pixel 8 Pro 128GB Bay',
+                    'storage' => '128GB',
+                    'color' => 'Bay Blue',
+                    'imei_1' => $newImei,
+                    'serial_number' => 'PIXEL8-EDIT-CAT',
+                    'quantity' => 1,
+                    'selling_price' => 79999,
+                    'warranty_status' => 'company_warranty',
+                ],
+            ],
+            'amount_paid' => '79999',
+        ]);
+
+        $resp->assertRedirect();
+
+        // Verify device was auto-created in items catalogue
+        $editedItem = Item::where('tenant_id', $user->tenant_id)->where('imei_1', $newImei)->first();
+        $this->assertNotNull($editedItem, 'Device added during edit was not saved into items catalogue.');
+        $this->assertEquals('Google Pixel 8 Pro 128GB Bay', $editedItem->item_name);
+        $this->assertEquals('sold', $editedItem->status);
+
+        $catalogueResp = $this->actingAs($user)->get('/items?status=sold&search='.$newImei);
+        $catalogueResp->assertOk();
+        $catalogueResp->assertSee('Google Pixel 8 Pro');
+        $catalogueResp->assertSee($newImei);
+    }
 }
