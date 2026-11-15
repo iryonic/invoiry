@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full antialiased" style="overflow-x: clip;">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full antialiased overflow-hidden">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -19,7 +19,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full text-[#111111] selection:bg-[#B7FF00] selection:text-[#101010] bg-[#F7F7F6] overflow-hidden" style="overflow-x: clip;">
+<body class="h-full text-[#111111] selection:bg-[#B7FF00] selection:text-[#101010] bg-[#F7F7F6] overflow-hidden antialiased">
 
     <x-page-loader />
 

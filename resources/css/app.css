@@ -34,7 +34,10 @@
 
 html,
 body {
-    overflow-x: clip;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
     background-color: var(--color-workspace);
     color: var(--color-primary-text);
     font-family: var(--font-ui);
