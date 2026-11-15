@@ -97,7 +97,7 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00]"></span>
                         <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Store Identity & Legal Details</h2>
                     </div>
-                    <span class="text-[11px] font-mono text-[#666666]">Primary Business Contact</span>
+                   
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -163,13 +163,12 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00]"></span>
                         <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Invoice Branding & Visual Assets</h2>
                     </div>
-                    <span class="text-[11px] font-mono text-[#666666]">Receipt & PDF Customization</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Store Logo Upload & Live Preview -->
                     <div class="p-4 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-wrap items-center justify-between">
                             <label class="block text-xs font-bold text-[#111111]">Store Logo (Header Brand Icon)</label>
                             <span class="text-[10px] font-mono text-[#666666] bg-white px-2 py-0.5 rounded border border-[#E6E6E6]">PNG, JPG, SVG, WebP</span>
                         </div>
@@ -299,7 +298,7 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00]"></span>
                         <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">GST Statutory & Tax Rules</h2>
                     </div>
-                    <span class="text-[11px] font-mono text-[#666666]">Tax Compliance</span>
+                    
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -360,9 +359,9 @@
                 <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00]"></span>
-                        <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">UPI & Bank Account Settlement</h2>
+                        <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">UPI & Bank Account Info</h2>
                     </div>
-                    <span class="text-[11px] font-mono text-[#666666]">Payment Configuration</span>
+                    
                 </div>
 
                 <div class="p-3.5 bg-[#F7F7F6] rounded-xl border border-[#E6E6E6] text-xs text-[#344054] flex items-start gap-3">
@@ -429,7 +428,7 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00]"></span>
                         <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Bill Terms & Legal Declarations</h2>
                     </div>
-                    <span class="text-[11px] font-mono text-[#666666]">Legal Compliance</span>
+                   
                 </div>
 
                 <div class="space-y-3.5">
@@ -462,8 +461,8 @@
     <div id="tabPanel-security" class="settings-tab-panel hidden space-y-4">
         <!-- Change Password Card -->
         <div class="card-surface p-5 sm:p-6 shadow-2xs space-y-4">
-            <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
-                <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between border-b border-[#E6E6E6] pb-3">
+                <div class="flex  items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#111111]"></span>
                     <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Account Password & Credentials</h2>
                 </div>
@@ -512,7 +511,7 @@
 
         <!-- Terminal Session Management Card -->
         <div class="card-surface p-5 sm:p-6 shadow-2xs space-y-4">
-            <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
+            <div class="flex flex-wrap items-center justify-between border-b border-[#E6E6E6] pb-3">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00] border border-[#111111]"></span>
                     <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Active Terminal Sessions & Counter Lock</h2>

@@ -99,7 +99,7 @@
     </div>
 
     <!-- Main Outer Container / Desktop Shell -->
-    <div class="w-full h-full flex flex-col {{ $isImpersonating ? 'pt-7' : '' }}">
+    <div class="w-full h-full flex flex-col overflow-hidden {{ $isImpersonating ? 'pt-7' : '' }}" style="height: 100%; overflow: hidden;">
         
         <!-- Application Frame -->
         <div class="flex-1 flex flex-row min-h-0 bg-[#F7F7F6] overflow-hidden">
@@ -238,7 +238,7 @@
                         </div>
                     @endif
 
-                    @if(session('error') || $errors->any())
+                    @if(session('error') || (isset($errors) && $errors->any()))
                         <div class="p-3.5 bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] rounded-xl text-xs font-semibold shadow-xs flex items-start justify-between gap-3" role="alert">
                             <div class="flex items-start gap-2.5 flex-1 min-w-0">
                                 <div class="w-5 h-5 rounded-full bg-[#DC2626]/15 flex items-center justify-center shrink-0 mt-0.5">
@@ -248,7 +248,7 @@
                                     @if(session('error'))
                                         <p class="leading-relaxed">{{ session('error') }}</p>
                                     @endif
-                                    @if($errors->any())
+                                    @if(isset($errors) && $errors->any())
                                         <ul class="list-disc list-inside space-y-0.5 text-[#991B1B]">
                                             @foreach($errors->all() as $err)
                                                 <li>{{ $err }}</li>

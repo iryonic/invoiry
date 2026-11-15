@@ -5,10 +5,10 @@
 @section('page-subtitle', 'Manage personal identity, credentials, active sessions, and security history')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Profile Header Card -->
-    <div class="card-surface p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+    <div class="card-surface p-3 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
             <div class="relative group">
                 <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-16 h-16 rounded-2xl object-cover border-2 border-black/10 bg-[#050505]">
@@ -164,7 +164,7 @@
 
     <!-- Section 3: Active Device Sessions -->
     <div class="card-surface p-5 sm:p-6 shadow-2xs space-y-4">
-        <div class="border-b border-[#E6E6E6] pb-3 flex items-center justify-between">
+        <div class="border-b border-[#E6E6E6] pb-3 flex flex-wrap items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[#079455]"></span>
                 <h3 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Active Device Sessions</h3>

@@ -481,3 +481,21 @@ body.preloader-active {
         transition: none !important;
     }
 }
+
+/* Explicit Item List Visibility Rules across Mobile and Desktop */
+@media (min-width: 768px) {
+    .items-desktop-table {
+        display: block !important;
+    }
+    .items-mobile-cards {
+        display: none !important;
+    }
+}
+@media (max-width: 767.98px) {
+    .items-desktop-table {
+        display: none !important;
+    }
+    .items-mobile-cards {
+        display: block !important;
+    }
+}

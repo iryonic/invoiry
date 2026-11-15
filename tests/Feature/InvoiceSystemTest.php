@@ -1333,4 +1333,24 @@ class InvoiceSystemTest extends TestCase
         ]);
         $response->assertJsonPath('item.id', $existing->id);
     }
+
+    public function test_apex_user_items_page(): void
+    {
+        $user = User::where('email', 'apex@gmail.com')->first();
+        if (! $user) {
+            $user = User::factory()->create(['role' => 'tenant_admin']);
+        }
+        $item = Item::factory()->create([
+            'tenant_id' => $user->tenant_id,
+            'item_name' => 'Iphone 15 pro',
+            'status' => 'sold',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->get('/items');
+        $response->assertOk();
+        $response->assertSee('Iphone 15 pro');
+        $response->assertSee('items-desktop-table');
+    }
 }

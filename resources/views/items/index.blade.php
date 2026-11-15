@@ -23,7 +23,7 @@
     </div>
 
     <!-- Quick Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class=" p-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <a href="{{ route('items.index', ['status' => 'all']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'all' ? 'border-[#111111] ring-1 ring-[#111111]' : '' }}">
             <span class="text-xs font-bold text-[#111111] uppercase tracking-wider">All Devices</span>
             <div class="text-xl sm:text-2xl font-bold text-[#111111] mt-1">{{ $stats['in_stock'] + $stats['sold'] }} devices</div>
@@ -101,7 +101,7 @@
         </div>
 
         <!-- Mobile Card View -->
-        <div class="block md:hidden space-y-3">
+        <div class="block md:hidden space-y-3 items-mobile-cards">
             @foreach($items as $item)
                 <div class="card-surface p-4 space-y-3 shadow-2xs transition" data-card-item>
                     <div class="flex items-start justify-between gap-3">
@@ -132,6 +132,7 @@
                                 @endif
                             </div>
                         </div>
+                    </div>
 
                         <div class="text-right flex-shrink-0">
                             @if($item->status === 'in_stock')
@@ -171,7 +172,7 @@
         </div>
 
         <!-- Desktop Table View -->
-        <div class="hidden md:block card-surface overflow-hidden shadow-2xs">
+        <div class="hidden md:block card-surface overflow-hidden shadow-2xs items-desktop-table">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-[#F7F7F6] border-b border-[#E6E6E6] text-[#666666] uppercase tracking-wider font-semibold">
