@@ -134,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/items/bulk', [ItemController::class, 'bulkAction'])->name('items.bulk')->middleware('permission:items.view');
     Route::get('/items/create', [ItemController::class, 'create'])->name('items.create')->middleware('permission:items.create');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('permission:items.create');
+    Route::post('/items/quick-store', [ItemController::class, 'quickStore'])->name('items.quick-store')->middleware('permission:items.create');
     Route::get('/items/search-api', [ItemController::class, 'searchApi'])->name('items.search-api')->middleware('permission:items.view');
     Route::get('/api/items/search', [ItemController::class, 'searchApi'])->name('api.items.search')->middleware('permission:items.view');
     Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show')->middleware('permission:items.view');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Item;
+use App\Models\StockAdjustment;
 use App\Models\Supplier;
 use App\Services\DynamicFormConfig;
 use App\Services\TenantContext;
@@ -24,8 +25,8 @@ class ItemController extends Controller
         $tenant = TenantContext::get();
         $query = Item::where('tenant_id', $tenant->id)->with('supplier');
 
-        // Status filter (default: in_stock)
-        $status = $request->get('status', 'in_stock');
+        // Status filter (default: all - showing all catalogue devices like /customers)
+        $status = $request->get('status', 'all');
         if ($status !== 'all') {
             $query->where('status', $status);
         }
@@ -380,5 +381,126 @@ class ItemController extends Controller
         }
 
         return back()->with('success', $msg);
+    }
+
+    /**
+     * Quickly catalogue a new device on-the-fly (e.g. from the billing screen).
+     */
+    public function quickStore(Request $request): JsonResponse
+    {
+        $tenant = TenantContext::get();
+
+        $validated = $request->validate([
+            'item_name' => ['required', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'storage' => ['nullable', 'string', 'max:50'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'specs' => ['nullable', 'string'],
+            'imei_1' => ['nullable', 'string', 'max:50'],
+            'imei_2' => ['nullable', 'string', 'max:50'],
+            'serial_number' => ['nullable', 'string', 'max:100'],
+            'condition' => ['nullable', 'in:new,used,refurbished'],
+            'selling_price' => ['nullable', 'numeric', 'min:0'],
+            'purchase_price' => ['nullable', 'numeric', 'min:0'],
+            'warranty_status' => ['nullable', 'in:no_warranty,store_warranty,company_warranty'],
+            'warranty_expiry_date' => ['nullable', 'date'],
+            'quantity' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $imei1 = ! empty($validated['imei_1']) ? trim($validated['imei_1']) : null;
+        $serial = ! empty($validated['serial_number']) ? trim($validated['serial_number']) : null;
+
+        // Check if device already exists in the catalogue by IMEI or Serial
+        $existing = null;
+        if ($imei1) {
+            $existing = Item::where('tenant_id', $tenant->id)->where('imei_1', $imei1)->first();
+        }
+        if (! $existing && $serial) {
+            $existing = Item::where('tenant_id', $tenant->id)->where('serial_number', $serial)->first();
+        }
+
+        if ($existing) {
+            return response()->json([
+                'success' => true,
+                'already_exists' => true,
+                'message' => "Device already in catalogue ({$existing->item_name})",
+                'item' => [
+                    'id' => $existing->id,
+                    'item_name' => $existing->item_name,
+                    'brand' => $existing->brand,
+                    'storage' => $existing->storage,
+                    'color' => $existing->color,
+                    'specs' => $existing->specs,
+                    'imei_1' => $existing->imei_1,
+                    'imei_2' => $existing->imei_2,
+                    'serial_number' => $existing->serial_number,
+                    'selling_price' => $existing->selling_price,
+                    'purchase_price' => $existing->purchase_price,
+                    'status' => $existing->status,
+                    'quantity' => $existing->quantity,
+                ],
+            ]);
+        }
+
+        $qty = max(1, (int) ($validated['quantity'] ?? 1));
+        $item = Item::create([
+            'tenant_id' => $tenant->id,
+            'item_name' => $validated['item_name'],
+            'brand' => $validated['brand'] ?? (explode(' ', trim($validated['item_name']))[0] ?? null),
+            'category' => $validated['category'] ?? 'Mobile',
+            'storage' => $validated['storage'] ?? null,
+            'color' => $validated['color'] ?? null,
+            'specs' => $validated['specs'] ?? null,
+            'imei_1' => $imei1,
+            'imei_2' => ! empty($validated['imei_2']) ? trim($validated['imei_2']) : null,
+            'serial_number' => $serial,
+            'condition' => $validated['condition'] ?? 'new',
+            'status' => 'in_stock',
+            'purchase_price' => $validated['purchase_price'] ?? 0.00,
+            'selling_price' => $validated['selling_price'] ?? 0.00,
+            'warranty_status' => $validated['warranty_status'] ?? 'no_warranty',
+            'warranty_expiry_date' => $validated['warranty_expiry_date'] ?? null,
+            'purchase_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+            'quantity' => $qty,
+            'is_device' => true,
+            'remark' => 'Quick-catalogued from billing screen',
+        ]);
+
+        StockAdjustment::create([
+            'tenant_id' => $tenant->id,
+            'item_id' => $item->id,
+            'user_id' => auth()->id(),
+            'invoice_id' => null,
+            'adjustment_type' => 'manual',
+            'quantity_change' => $qty,
+            'quantity_before' => 0,
+            'quantity_after' => $qty,
+            'reason' => 'Quick-catalogued from billing screen',
+        ]);
+
+        AuditLog::record('item.quick_catalogued', "Device {$item->item_name} (IMEI: {$item->imei_1}) added to catalogue from billing", $tenant->id, auth()->id());
+
+        return response()->json([
+            'success' => true,
+            'already_exists' => false,
+            'message' => 'Device saved to inventory catalogue successfully!',
+            'item' => [
+                'id' => $item->id,
+                'item_name' => $item->item_name,
+                'brand' => $item->brand,
+                'storage' => $item->storage,
+                'color' => $item->color,
+                'specs' => $item->specs,
+                'imei_1' => $item->imei_1,
+                'imei_2' => $item->imei_2,
+                'serial_number' => $item->serial_number,
+                'selling_price' => $item->selling_price,
+                'purchase_price' => $item->purchase_price,
+                'status' => $item->status,
+                'quantity' => $item->quantity,
+            ],
+        ]);
     }
 }

@@ -23,12 +23,16 @@
     </div>
 
     <!-- Quick Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <a href="{{ route('items.index', ['status' => 'in_stock']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'in_stock' ? 'border-[#B7FF00] ring-1 ring-[#B7FF00]' : '' }}">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <a href="{{ route('items.index', ['status' => 'all']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'all' ? 'border-[#111111] ring-1 ring-[#111111]' : '' }}">
+            <span class="text-xs font-bold text-[#111111] uppercase tracking-wider">All Devices</span>
+            <div class="text-xl sm:text-2xl font-bold text-[#111111] mt-1">{{ $stats['in_stock'] + $stats['sold'] }} devices</div>
+        </a>
+        <a href="{{ route('items.index', ['status' => 'in_stock']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'in_stock' ? 'border-[#079455] ring-1 ring-[#079455]' : '' }}">
             <span class="text-xs font-bold text-[#079455] uppercase tracking-wider">Available Stock</span>
             <div class="text-xl sm:text-2xl font-bold text-[#111111] mt-1">{{ $stats['in_stock'] }} devices</div>
         </a>
-        <a href="{{ route('items.index', ['status' => 'sold']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'sold' ? 'border-[#111111] ring-1 ring-[#111111]' : '' }}">
+        <a href="{{ route('items.index', ['status' => 'sold']) }}" class="card-surface p-4 flex flex-col justify-between shadow-2xs transition {{ $status === 'sold' ? 'border-[#666666] ring-1 ring-[#666666]' : '' }}">
             <span class="text-xs font-bold text-[#666666] uppercase tracking-wider">Sold Devices</span>
             <div class="text-xl sm:text-2xl font-bold text-[#111111] mt-1">{{ $stats['sold'] }} devices</div>
         </a>
@@ -50,8 +54,8 @@
 
             <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <select name="status" class="px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black min-h-[40px]">
-                    <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Status</option>
-                    <option value="in_stock" {{ request('status', 'in_stock') === 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
+                    <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Status (Complete Catalogue)</option>
+                    <option value="in_stock" {{ request('status') === 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
                     <option value="sold" {{ request('status') === 'sold' ? 'selected' : '' }}>Sold Only</option>
                 </select>
 
@@ -65,7 +69,7 @@
                 <button type="submit" class="px-4 py-2 bg-[#050505] hover:bg-[#1a1a1a] text-white rounded-lg text-xs sm:text-sm font-semibold min-h-[40px] transition">
                     Filter
                 </button>
-                @if(request()->hasAny(['search', 'condition']) || request('status') !== 'in_stock')
+                @if(request()->hasAny(['search', 'condition']) || (request('status') && request('status') !== 'all'))
                     <a href="{{ route('items.index') }}" class="px-3 py-2 text-[#666666] hover:text-[#111111] text-xs font-semibold min-h-[40px] inline-flex items-center">
                         Reset
                     </a>
@@ -138,7 +142,10 @@
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold badge-neutral">Sold</span>
                             @endif
-                            <div class="text-sm font-bold text-[#111111] mt-1">₹{{ number_format($item->purchase_price, 2) }}</div>
+                            <div class="text-sm font-bold text-[#111111] mt-1">₹{{ number_format($item->selling_price > 0 ? $item->selling_price : ($item->purchase_price ?: 0), 2) }}</div>
+                            @if($item->purchase_price > 0 && $item->selling_price > 0)
+                                <div class="text-[10px] text-[#929292]">Cost: ₹{{ number_format($item->purchase_price, 2) }}</div>
+                            @endif
                             <span class="text-[10px] text-[#929292] capitalize">{{ $item->condition }}</span>
                         </div>
                     </div>
@@ -219,7 +226,10 @@
                                     {{ $item->supplier ? $item->supplier->name : 'Walk-in' }}
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-[#111111]">
-                                    ₹{{ number_format($item->purchase_price, 2) }}
+                                    <div>₹{{ number_format($item->selling_price > 0 ? $item->selling_price : ($item->purchase_price ?: 0), 2) }}</div>
+                                    @if($item->purchase_price > 0 && $item->selling_price > 0)
+                                        <div class="text-[10px] text-[#929292] font-normal">Cost: ₹{{ number_format($item->purchase_price, 2) }}</div>
+                                    @endif
                                 </td>
                                 <td class="py-3.5 px-4 text-[#666666]">
                                     {{ $item->purchase_date?->format('d M Y') ?? '-' }}

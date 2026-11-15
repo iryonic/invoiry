@@ -284,10 +284,16 @@
                                 <span class="w-5 h-5 rounded-full bg-[#111111] text-[#B7FF00] inline-flex items-center justify-center text-[10px] font-mono row-number">{{ $idx + 1 }}</span>
                                 <span>Device / Item Details</span>
                             </span>
-                            <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                <span>Remove</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="quickSaveDeviceToCatalogue(this)" class="quick-save-stock-btn text-[11px] font-semibold text-[#079455] hover:text-[#067644] bg-[#ECFDF3] hover:bg-[#D1FADF] px-2.5 py-1 rounded-md transition flex items-center gap-1 border border-[#A6F4C5]" title="Immediately catalogue this device to /items stock">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                    <span>Save to Device List</span>
+                                </button>
+                                <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    <span>Remove</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Device Inventory Selector Dropdown -->
@@ -512,7 +518,7 @@
 
             <!-- Sticky Summary & Checkout Card (1 col) -->
             <div class="space-y-4">
-                <div class="card-dark p-6 rounded-2xl shadow-xl space-y-4">
+                <div class="bg-black card-dark p-6 rounded-2xl shadow-xl space-y-4">
                     <span class="text-xs font-bold text-[#929292] uppercase tracking-wider block">Billing Breakdown</span>
 
                     <div class="space-y-2.5 text-xs">
@@ -680,10 +686,16 @@
                     <span class="w-5 h-5 rounded-full bg-[#111111] text-[#B7FF00] inline-flex items-center justify-center text-[10px] font-mono row-number">${newIndex + 1}</span>
                     <span>Device / Item Details</span>
                 </span>
-                <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    <span>Remove</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="quickSaveDeviceToCatalogue(this)" class="quick-save-stock-btn text-[11px] font-semibold text-[#079455] hover:text-[#067644] bg-[#ECFDF3] hover:bg-[#D1FADF] px-2.5 py-1 rounded-md transition flex items-center gap-1 border border-[#A6F4C5]" title="Immediately catalogue this device to /items stock">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                        <span>Save to Device List</span>
+                    </button>
+                    <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span>Remove</span>
+                    </button>
+                </div>
             </div>
 
             <div class="p-3 bg-white rounded-lg border border-[#E6E6E6]">
@@ -808,6 +820,109 @@
         btn.closest('.item-row').remove();
         renumberRows();
         calculateTotals();
+    }
+
+    async function quickSaveDeviceToCatalogue(button) {
+        const row = button.closest('.item-row');
+        if (!row) return;
+
+        const itemNameInput = row.querySelector('input[name*="[item_name]"]');
+        const itemName = itemNameInput ? itemNameInput.value.trim() : '';
+
+        if (!itemName) {
+            alert('Please enter a Device / Model Name before saving to the Device List.');
+            if (itemNameInput) itemNameInput.focus();
+            return;
+        }
+
+        const brandInput = row.querySelector('input[name*="[brand]"]');
+        const storageInput = row.querySelector('input[name*="[storage]"]');
+        const colorInput = row.querySelector('input[name*="[color]"]');
+        const specsInput = row.querySelector('input[name*="[specs]"]');
+        const imei1Input = row.querySelector('input[name*="[imei_1]"]');
+        const imei2Input = row.querySelector('input[name*="[imei_2]"]');
+        const serialInput = row.querySelector('input[name*="[serial_number]"]');
+        const priceInput = row.querySelector('input[name*="[selling_price]"]');
+        const warrantyInput = row.querySelector('select[name*="[warranty_status]"]');
+        const warrantyDateInput = row.querySelector('input[name*="[warranty_expiry_date]"]');
+        const qtyInput = row.querySelector('input[name*="[quantity]"]');
+
+        const originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="inline-block w-3 h-3 border-2 border-green-700 border-t-transparent rounded-full animate-spin"></span> Saving...';
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch('{{ route("items.quick-store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    item_name: itemName,
+                    brand: brandInput?.value || '',
+                    storage: storageInput?.value || '',
+                    color: colorInput?.value || '',
+                    specs: specsInput?.value || '',
+                    imei_1: imei1Input?.value || '',
+                    imei_2: imei2Input?.value || '',
+                    serial_number: serialInput?.value || '',
+                    selling_price: priceInput?.value || 0,
+                    purchase_price: 0,
+                    warranty_status: warrantyInput?.value || 'no_warranty',
+                    warranty_expiry_date: warrantyDateInput?.value || null,
+                    quantity: qtyInput ? (parseInt(qtyInput.value) || 1) : 1
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                button.classList.remove('text-[#079455]', 'bg-[#ECFDF3]', 'border-[#A6F4C5]');
+                button.classList.add('text-white', 'bg-[#079455]', 'border-[#079455]');
+                button.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg> <span>Saved in /items!</span>';
+
+                // Also update the row's device-select dropdown
+                const deviceSelect = row.querySelector('.device-select');
+                if (deviceSelect && data.item) {
+                    let opt = deviceSelect.querySelector(`option[value="${data.item.id}"]`);
+                    if (!opt) {
+                        opt = document.createElement('option');
+                        opt.value = data.item.id;
+                        opt.textContent = `${data.item.item_name} • ${data.item.imei_1 || data.item.serial_number || 'New'} • ₹${parseFloat(data.item.selling_price || 0).toFixed(2)}`;
+                        opt.dataset.name = data.item.item_name;
+                        opt.dataset.brand = data.item.brand || '';
+                        opt.dataset.storage = data.item.storage || '';
+                        opt.dataset.color = data.item.color || '';
+                        opt.dataset.imei1 = data.item.imei_1 || '';
+                        opt.dataset.imei2 = data.item.imei_2 || '';
+                        opt.dataset.serial = data.item.serial_number || '';
+                        opt.dataset.price = data.item.selling_price || 0;
+                        opt.dataset.warranty = data.item.warranty_status || 'no_warranty';
+                        deviceSelect.appendChild(opt);
+                    }
+                    deviceSelect.value = data.item.id;
+                }
+
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                    button.classList.remove('text-white', 'bg-[#079455]', 'border-[#079455]');
+                    button.classList.add('text-[#079455]', 'bg-[#ECFDF3]', 'border-[#A6F4C5]');
+                }, 3000);
+            } else {
+                alert(data.message || 'Could not save device to stock.');
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        } catch (err) {
+            console.error('Quick store error:', err);
+            alert('An error occurred while saving to device catalogue.');
+            button.disabled = false;
+            button.innerHTML = originalHtml;
+        }
     }
 
     function renumberRows() {

@@ -1260,4 +1260,77 @@ class InvoiceSystemTest extends TestCase
         $catalogueResp->assertSee('Google Pixel 8 Pro');
         $catalogueResp->assertSee($newImei);
     }
+
+    public function test_items_index_defaults_to_all_status_showing_both_in_stock_and_sold_devices(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $this->actingAs($user);
+
+        // Ensure we have at least one in_stock and one sold device
+        $inStockItem = Item::where('tenant_id', $user->tenant_id)->where('status', 'in_stock')->first();
+        $soldItem = Item::where('tenant_id', $user->tenant_id)->where('status', 'sold')->first();
+
+        $this->assertNotNull($inStockItem);
+        $this->assertNotNull($soldItem);
+
+        // Visiting /items without status parameter should display both
+        $response = $this->get('/items');
+        $response->assertOk();
+        $response->assertSee($inStockItem->item_name);
+        $response->assertSee($soldItem->item_name);
+        $response->assertSee('All Status (Complete Catalogue)');
+    }
+
+    public function test_quick_store_device_endpoint_creates_new_catalogue_item(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $this->actingAs($user);
+
+        $imei = '999888777666555';
+        $response = $this->postJson('/items/quick-store', [
+            'item_name' => 'OnePlus 12 512GB Flowy Emerald',
+            'brand' => 'OnePlus',
+            'storage' => '512GB',
+            'color' => 'Flowy Emerald',
+            'imei_1' => $imei,
+            'serial_number' => 'OP12-QUICK-TEST',
+            'selling_price' => 64999,
+            'quantity' => 1,
+            'warranty_status' => 'company_warranty',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'already_exists' => false,
+        ]);
+
+        $this->assertDatabaseHas('items', [
+            'tenant_id' => $user->tenant_id,
+            'imei_1' => $imei,
+            'item_name' => 'OnePlus 12 512GB Flowy Emerald',
+            'status' => 'in_stock',
+        ]);
+    }
+
+    public function test_quick_store_device_endpoint_detects_existing_device_by_imei(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $this->actingAs($user);
+
+        $existing = Item::where('tenant_id', $user->tenant_id)->whereNotNull('imei_1')->first();
+        $this->assertNotNull($existing);
+
+        $response = $this->postJson('/items/quick-store', [
+            'item_name' => 'Duplicate Attempt',
+            'imei_1' => $existing->imei_1,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'already_exists' => true,
+        ]);
+        $response->assertJsonPath('item.id', $existing->id);
+    }
 }
