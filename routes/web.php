@@ -95,8 +95,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/tenants/{tenant}/permissions', [SuperAdminController::class, 'permissionsUpdate'])->name('tenants.permissions.update');
 
         // Impersonation
-        Route::get('/impersonate/{tenant}', [SuperAdminController::class, 'impersonate'])->name('impersonate');
-        Route::get('/leave-impersonate', [SuperAdminController::class, 'leaveImpersonate'])->name('leave-impersonate');
+        Route::match(['GET', 'POST'], '/impersonate/{tenant}', [SuperAdminController::class, 'impersonate'])->name('impersonate');
+        Route::match(['GET', 'POST'], '/leave-impersonate', [SuperAdminController::class, 'leaveImpersonate'])->name('leave-impersonate');
 
         // Global Users Management
         Route::get('/users', [SuperAdminController::class, 'usersIndex'])->name('users.index');

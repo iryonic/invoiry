@@ -5,7 +5,7 @@
 @section('page-subtitle', 'Send transactional invoices, receipts, payment notices, or general business communication')
 
 @section('content')
-<div class="space-y-6 mx-auto">
+<div class="space-y-6 max-w-7xl mx-auto">
 
     <!-- Navigation Tabs -->
     @include('mail.partials.nav-tabs')

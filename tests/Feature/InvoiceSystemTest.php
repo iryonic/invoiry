@@ -152,8 +152,14 @@ class InvoiceSystemTest extends TestCase
         $superAdmin = User::where('role', 'super_admin')->first();
         $tenant = Tenant::where('slug', 'freetrial')->first();
 
+        // Test GET impersonation
         $response = $this->actingAs($superAdmin)->get(route('superadmin.impersonate', $tenant));
         $response->assertRedirect(route('dashboard'));
+        $this->assertEquals($tenant->id, session('active_tenant_id'));
+
+        // Test POST impersonation
+        $postResponse = $this->actingAs($superAdmin)->post(route('superadmin.impersonate', $tenant));
+        $postResponse->assertRedirect(route('dashboard'));
         $this->assertEquals($tenant->id, session('active_tenant_id'));
     }
 
