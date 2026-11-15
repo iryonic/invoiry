@@ -121,6 +121,12 @@
                     </div>
                 @endif
 
+                <div>
+                    <label class="block text-xs font-semibold text-[#111111] mb-1">Current Stock Quantity *</label>
+                    <input type="number" min="0" step="1" name="quantity" value="{{ old('quantity', $item->quantity) }}" required
+                        class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                </div>
+
                 @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'item', 'warranty_status'))
                     <div>
                         <label class="block text-xs font-semibold text-[#111111] mb-1">Warranty Status</label>
@@ -141,7 +147,7 @@
                 @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'item', 'purchase_date'))
                     <div>
                         <label class="block text-xs font-semibold text-[#111111] mb-1">Purchase Date</label>
-                        <input type="date" name="purchase_date" value="{{ old('purchase_date', $item->purchase_date->format('Y-m-d')) }}" required
+                        <input type="date" name="purchase_date" value="{{ old('purchase_date', $item->purchase_date?->format('Y-m-d')) }}" required
                             class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
                     </div>
                 @endif

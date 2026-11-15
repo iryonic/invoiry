@@ -8,6 +8,27 @@
 @php
     $tenant = $tenant ?? \App\Services\TenantContext::get();
     $user = auth()->user();
+
+    $oldItems = old('items');
+    if (empty($oldItems)) {
+        $oldItems = [
+            [
+                'item_id' => request('preselect_item'),
+                'item_name' => '',
+                'storage' => '',
+                'color' => '',
+                'specs' => '',
+                'imei_1' => '',
+                'imei_2' => '',
+                'serial_number' => '',
+                'quantity' => 1,
+                'selling_price' => '',
+                'warranty_status' => 'no_warranty',
+                'warranty_expiry_date' => '',
+                'notes' => '',
+            ]
+        ];
+    }
 @endphp
 <div class="max-w-7xl mx-auto space-y-6">
 
@@ -23,21 +44,33 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <!-- Camera Scanner Button -->
-            <button type="button" onclick="startScanner()" class="btn-secondary px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 min-h-[44px]">
+            <!-- Central Camera Scanner Button -->
+            <button type="button" onclick="startScanner('central')" class="btn-secondary px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 min-h-[44px]">
                 <svg class="w-4 h-4 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 <span>Scan Barcode / Box</span>
             </button>
         </div>
     </div>
 
-    <!-- Camera Barcode Scanner Modal -->
+    <!-- Draft Auto-Restore Notice Bar (Hidden by default, shown by JS if unsaved draft exists) -->
+    <div id="draftAlertBar" class="hidden p-3.5 rounded-xl bg-[#EFF8FF] border border-[#B2DDFF] text-xs text-[#175CD3] flex items-center justify-between gap-3 shadow-2xs">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#175CD3] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>You have an unsaved bill draft with items previously added in this browser.</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="restoreLocalDraft()" class="px-2.5 py-1 bg-[#175CD3] text-white rounded font-bold hover:bg-[#154fc1]">Restore Draft</button>
+            <button type="button" onclick="discardLocalDraft()" class="px-2.5 py-1 bg-white text-[#666666] border border-[#D0D5DD] rounded font-semibold hover:text-black">Discard</button>
+        </div>
+    </div>
+
+    <!-- Camera Barcode Scanner Modal (Shared for Central & Targeted Field Scanning) -->
     <div id="scannerModal" class="modal-backdrop hidden" onclick="if(event.target === this) stopScanner()">
         <div class="bg-white rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4 border border-[#E6E6E6] my-auto max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] animate-ping"></span>
-                    <h3 class="text-sm font-bold text-[#111111]">Scan Device Barcode / IMEI</h3>
+                    <h3 class="text-sm font-bold text-[#111111]" id="scannerModalTitle">Scan Device Barcode / IMEI</h3>
                 </div>
                 <button type="button" onclick="stopScanner()" class="p-1 text-[#929292] hover:text-[#111111] rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -47,7 +80,7 @@
             <!-- Viewfinder -->
             <div id="reader" class="rounded-lg overflow-hidden bg-[#050505] min-h-[250px]"></div>
 
-            <p class="text-[11px] text-center text-[#666666]">Align camera with IMEI or box barcode. In-stock items auto-populate the bill.</p>
+            <p class="text-[11px] text-center text-[#666666]" id="scannerModalInstructions">Align camera with IMEI 1, IMEI 2, or box serial barcode.</p>
 
             <button type="button" onclick="stopScanner()" class="w-full py-2.5 bg-[#F2F4F7] hover:bg-[#EAECF0] text-[#111111] rounded-lg text-xs font-semibold min-h-[44px] transition">
                 Close Scanner
@@ -65,7 +98,6 @@
                     <svg class="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     <span>Customer & Payment Information</span>
                 </h3>
-               
             </div>
 
             <!-- Quick Customer Selector Dropdown if customers exist -->
@@ -90,7 +122,7 @@
                 </div>
             @endif
 
-            <input type="hidden" name="customer_id" id="customer_id">
+            <input type="hidden" name="customer_id" id="customer_id" value="{{ old('customer_id') }}">
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -115,6 +147,15 @@
                         <input type="email" name="customer_email" id="customer_email" {{ \App\Services\DynamicFormConfig::isFieldRequired($tenant, 'invoice', 'customer_email') ? 'required' : '' }} value="{{ old('customer_email') }}"
                             placeholder="client@gmail.com"
                             class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+                @endif
+
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'customer_adhar'))
+                    <div>
+                        <label class="block text-xs font-semibold text-[#111111] mb-1">Aadhaar / ID Number</label>
+                        <input type="text" name="customer_adhar" id="customer_adhar" value="{{ old('customer_adhar') }}"
+                            placeholder="4-4-4 Aadhaar Digits"
+                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
                     </div>
                 @endif
 
@@ -149,10 +190,10 @@
                     <div>
                         <label class="block text-xs font-semibold text-[#111111] mb-1">Payment Method *</label>
                         <select name="payment_method" id="payment_method" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-semibold text-[#111111] focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                            <option value="upi">UPI / GPay / PhonePe</option>
-                            <option value="cash">Cash Counter</option>
-                            <option value="bank">Bank Transfer / IMPS</option>
-                            <option value="mixed">Split / Mixed Payment</option>
+                            <option value="upi" {{ old('payment_method') === 'upi' ? 'selected' : '' }}>UPI / GPay / PhonePe</option>
+                            <option value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'selected' : '' }}>Cash Counter</option>
+                            <option value="bank" {{ old('payment_method') === 'bank' ? 'selected' : '' }}>Bank Transfer / IMPS</option>
+                            <option value="mixed" {{ old('payment_method') === 'mixed' ? 'selected' : '' }}>Split / Mixed Payment</option>
                         </select>
                     </div>
                 @else
@@ -171,7 +212,7 @@
             </div>
         </div>
 
-        <!-- 2. Line Items Container -->
+        <!-- 2. Line Items Container & Centralized Barcode Scanner -->
         <div class="card-surface p-5 sm:p-6 space-y-4 shadow-2xs">
             <div class="flex items-center justify-between border-b border-[#E6E6E6] pb-3">
                 <h3 class="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-2">
@@ -184,114 +225,177 @@
                 </button>
             </div>
 
-            <!-- Items Wrapper -->
-            <div id="itemsWrapper" class="space-y-4">
-                <!-- Template / First Item Entry -->
-                <div class="item-row p-4 rounded-xl bg-[#F7F7F6] border border-[#E6E6E6] space-y-4" data-index="0">
-                    <div class="flex items-center justify-between">
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-[#111111] uppercase tracking-wider item-label">
-                            <span class="w-2 h-2 rounded-full bg-[#B7FF00]"></span> Item #1
-                        </span>
-                        <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold remove-btn hidden">
-                            Remove
-                        </button>
-                    </div>
-
-                    <!-- In-Stock Picker -->
-                    <div class="p-3 bg-white rounded-lg border border-[#E6E6E6]">
-                        <label class="block text-[11px] font-bold text-[#111111] uppercase mb-1">
-                            Select Available Phone from Stock (Or fill custom item below)
-                        </label>
-                        <select onchange="onStockItemSelect(this, 0)" class="stock-picker w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-md text-xs font-medium focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                            <option value="">-- Choose from available in-stock devices --</option>
-                            @foreach($inStockItems as $stk)
-                                <option value="{{ $stk->id }}"
-                                    data-name="{{ $stk->item_name }}"
-                                    data-storage="{{ $stk->storage }}"
-                                    data-color="{{ $stk->color }}"
-                                    data-specs="{{ $stk->specs }}"
-                                    data-imei1="{{ $stk->imei_1 }}"
-                                    data-imei2="{{ $stk->imei_2 }}"
-                                    data-serial="{{ $stk->serial_number }}"
-                                    data-price="{{ $stk->selling_price ?: $stk->purchase_price }}"
-                                    data-warranty="{{ $stk->warranty_status }}"
-                                    data-expiry="{{ $stk->warranty_expiry_date?->format('Y-m-d') }}"
-                                    {{ request('preselect_item') == $stk->id ? 'selected' : '' }}>
-                                    {{ $stk->item_name }} ({{ $stk->storage }}) &bull; {{ $stk->color }} &bull; IMEI: {{ $stk->imei_1 ?: 'N/A' }} &bull; ₹{{ number_format($stk->selling_price ?: $stk->purchase_price, 0) }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <input type="hidden" name="items[0][item_id]" class="field-item-id" value="{{ request('preselect_item') }}">
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div class="sm:col-span-2">
-                            <label class="block text-[11px] font-semibold text-[#111111] mb-1">Device / Item Name *</label>
-                            <input type="text" name="items[0][item_name]" required placeholder="e.g. iPhone 16"
-                                class="field-name w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black">
-                        </div>
-
-                        @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'storage_color'))
-                            <div>
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">Storage</label>
-                                <input type="text" name="items[0][storage]" placeholder="128GB"
-                                    class="field-storage w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-
-                            <div>
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">Color</label>
-                                <input type="text" name="items[0][color]" placeholder="Black"
-                                    class="field-color w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-                        @endif
-
-                        @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'imei_serial'))
-                            <div>
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">IMEI 1</label>
-                                <input type="text" name="items[0][imei_1]" placeholder="8647210..."
-                                    class="field-imei1 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs font-mono focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-
-                            <div>
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">IMEI 2</label>
-                                <input type="text" name="items[0][imei_2]" placeholder="8647210..."
-                                    class="field-imei2 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs font-mono focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-
-                            <div>
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">Serial Number</label>
-                                <input type="text" name="items[0][serial_number]" placeholder="Serial / Part No."
-                                    class="field-serial w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs font-mono focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-                        @endif
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-[#111111] mb-1">Selling Price (₹) *</label>
-                            <input type="number" step="0.01" name="items[0][selling_price]" required placeholder="0.00" oninput="calculateTotals()"
-                                class="field-price w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-black">
-                        </div>
-
-                        @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'warranty'))
-                            <div class="sm:col-span-2">
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">Warranty Coverage</label>
-                                <select name="items[0][warranty_status]" class="field-warranty w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-black">
-                                    <option value="no_warranty">No Warranty</option>
-                                    <option value="store_warranty">Store Testing Warranty</option>
-                                    <option value="company_warranty">Brand / Company Warranty</option>
-                                </select>
-                            </div>
-
-                            <div class="sm:col-span-2">
-                                <label class="block text-[11px] font-semibold text-[#111111] mb-1">Warranty Expiry Date</label>
-                                <input type="date" name="items[0][warranty_expiry_date]"
-                                    class="field-expiry w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-black">
-                            </div>
-                        @else
-                            <input type="hidden" name="items[0][warranty_status]" value="no_warranty">
-                        @endif
+            <!-- Centralized Barcode / IMEI / Serial Scanner Bar -->
+            <div class="p-3.5 bg-[#050505] text-white rounded-xl border border-white/10 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#B7FF00] animate-pulse"></span>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider">Centralized Device Scanner</span>
                     </div>
                 </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="centralScannerInput" placeholder="Scan or type IMEI 1, IMEI 2, or Serial Number (Press Enter)..."
+                            autocomplete="off"
+                            class="w-full pl-9 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-xs font-mono text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#B7FF00] min-h-[44px]">
+                        <svg class="w-4 h-4 text-white/50 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                    </div>
+                    <button type="button" onclick="startScanner('central')" class="btn-lime px-4 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 min-h-[44px] shrink-0">
+                        <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        <span>Scan Camera</span>
+                    </button>
+                </div>
+
+                <div id="centralScannerFeedback" class="hidden text-xs py-1.5 px-3 rounded-lg font-medium flex items-center justify-between">
+                    <span id="centralScannerMsg"></span>
+                    <button type="button" onclick="document.getElementById('centralScannerFeedback').classList.add('hidden')" class="text-white/60 hover:text-white">&times;</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Items Container -->
+            <div id="itemsWrapper" class="space-y-4">
+                @foreach($oldItems as $idx => $it)
+                    <div class="item-row p-4 sm:p-5 rounded-xl border border-[#E6E6E6] bg-[#FAFAFA] space-y-4 relative transition hover:border-[#CCCCCC]" data-index="{{ $idx }}">
+                        <!-- Row Header with Number and Remove Button -->
+                        <div class="flex items-center justify-between border-b border-[#EBEBEB] pb-2">
+                            <span class="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-[#111111] text-[#B7FF00] inline-flex items-center justify-center text-[10px] font-mono row-number">{{ $idx + 1 }}</span>
+                                <span>Device / Item Details</span>
+                            </span>
+                            <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1 remove-btn {{ $idx === 0 && count($oldItems) === 1 ? 'hidden' : '' }}">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+
+                        <!-- Device Inventory Selector Dropdown -->
+                        <div class="p-3 bg-white rounded-lg border border-[#E6E6E6]">
+                            <label class="block text-[11px] font-bold text-[#666666] uppercase mb-1">Pick Registered Device / Stock (Optional)</label>
+                            <select name="items[{{ $idx }}][item_id]" class="device-select w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-md text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black" onchange="autoFillItemRow(this)">
+                                <option value="">-- Manual walk-in entry or select registered stock --</option>
+                                @foreach($inStockItems as $device)
+                                    <option value="{{ $device->id }}"
+                                        data-name="{{ $device->item_name }}"
+                                        data-brand="{{ $device->brand }}"
+                                        data-model="{{ $device->model }}"
+                                        data-storage="{{ $device->storage ?? $device->ram_rom }}"
+                                        data-color="{{ $device->color }}"
+                                        data-imei1="{{ $device->imei_1 }}"
+                                        data-imei2="{{ $device->imei_2 }}"
+                                        data-serial="{{ $device->serial_number }}"
+                                        data-price="{{ $device->selling_price ?: $device->purchase_price }}"
+                                        data-warranty="{{ $device->warranty_status ?? 'no_warranty' }}"
+                                        data-warranty-date="{{ $device->warranty_expiry_date ? $device->warranty_expiry_date->format('Y-m-d') : '' }}"
+                                        data-notes="{{ $device->notes }}"
+                                        {{ (string)($it['item_id'] ?? '') === (string)$device->id ? 'selected' : '' }}>
+                                        {{ $device->item_name }} &bull; {{ $device->brand }} {{ $device->model }} &bull; {{ $device->storage }} &bull; ₹{{ number_format((float) ($device->selling_price ?: $device->purchase_price ?: 0), 2) }} (Qty: {{ $device->quantity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Fields Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-[#111111] mb-1">Item / Device Name *</label>
+                                <input type="text" name="items[{{ $idx }}][item_name]" value="{{ $it['item_name'] ?? '' }}" required placeholder="e.g. Apple iPhone 15 Pro"
+                                    class="row-name w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                            </div>
+
+                            @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'storage_color'))
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">Storage / RAM</label>
+                                    <input type="text" name="items[{{ $idx }}][storage]" value="{{ $it['storage'] ?? '' }}" placeholder="128GB / 8GB RAM"
+                                        class="row-storage w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">Color / Finish</label>
+                                    <input type="text" name="items[{{ $idx }}][color]" value="{{ $it['color'] ?? '' }}" placeholder="Natural Titanium"
+                                        class="row-color w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+                            @endif
+
+                            @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'imei_serial'))
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">IMEI 1 (15 digits)</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="text" name="items[{{ $idx }}][imei_1]" value="{{ $it['imei_1'] ?? '' }}" placeholder="35xxxxxxxxxxxxx"
+                                            class="row-imei1 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                                        <button type="button" onclick="startScanner('imei_1', this)" title="Scan IMEI 1"
+                                            class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">IMEI 2 (Optional)</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="text" name="items[{{ $idx }}][imei_2]" value="{{ $it['imei_2'] ?? '' }}" placeholder="35xxxxxxxxxxxxx"
+                                            class="row-imei2 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                                        <button type="button" onclick="startScanner('imei_2', this)" title="Scan IMEI 2"
+                                            class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">Serial Number</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="text" name="items[{{ $idx }}][serial_number]" value="{{ $it['serial_number'] ?? '' }}" placeholder="F2Lxxxxxxxxx"
+                                            class="row-serial w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                                        <button type="button" onclick="startScanner('serial_number', this)" title="Scan Serial Number"
+                                            class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div>
+                                <label class="block font-semibold text-[#111111] mb-1">Qty *</label>
+                                <input type="number" step="1" min="1" name="items[{{ $idx }}][quantity]" value="{{ $it['quantity'] ?? 1 }}" required
+                                    oninput="calculateTotals()"
+                                    class="row-qty w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono font-bold focus:outline-none focus:ring-1 focus:ring-black">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-[#111111] mb-1">Selling Rate (₹) *</label>
+                                <input type="number" step="0.01" min="0" name="items[{{ $idx }}][selling_price]" value="{{ $it['selling_price'] ?? '' }}" required
+                                    placeholder="0.00" oninput="calculateTotals()"
+                                    class="row-price w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono font-bold focus:outline-none focus:ring-1 focus:ring-black">
+                            </div>
+
+                            @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'warranty'))
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">Warranty Term</label>
+                                    <select name="items[{{ $idx }}][warranty_status]" class="row-warranty w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                                        <option value="no_warranty" {{ ($it['warranty_status'] ?? '') === 'no_warranty' ? 'selected' : '' }}>No Warranty</option>
+                                        <option value="store_warranty" {{ ($it['warranty_status'] ?? '') === 'store_warranty' ? 'selected' : '' }}>Store Warranty</option>
+                                        <option value="company_warranty" {{ ($it['warranty_status'] ?? '') === 'company_warranty' ? 'selected' : '' }}>Brand Warranty</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-[#111111] mb-1">Warranty Expiry</label>
+                                    <input type="date" name="items[{{ $idx }}][warranty_expiry_date]" value="{{ $it['warranty_expiry_date'] ?? '' }}"
+                                        class="row-warranty-date w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+                            @endif
+
+                            @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'notes'))
+                                <div class="sm:col-span-2">
+                                    <label class="block font-semibold text-[#111111] mb-1">Item Notes / Remarks</label>
+                                    <input type="text" name="items[{{ $idx }}][notes]" value="{{ $it['notes'] ?? '' }}" placeholder="Condition, included charger, adapter, etc."
+                                        class="row-notes w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
             <button type="button" onclick="addItemRow()" class="w-full py-2.5 border border-dashed border-[#D6D6D6] hover:border-[#111111] hover:bg-white rounded-lg text-xs font-semibold text-[#666666] hover:text-[#111111] min-h-[44px] transition">
@@ -317,15 +421,13 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- GST Invoice Switch -->
                     @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'is_gst'))
-                        <div class="p-3.5 rounded-lg bg-[#F7F7F6] border border-[#E6E6E6] flex items-center justify-between">
+                        <div class="p-3.5 rounded-xl border border-[#E6E6E6] bg-[#F7F7F6] flex items-center justify-between">
                             <div>
-                                <span class="block text-xs font-semibold text-[#111111]">GST Tax Invoice</span>
-                                <span class="block text-[11px] text-[#666666]" id="gstSubtext">Calculate & report statutory taxes</span>
+                                <label for="is_gst" class="block text-xs font-bold text-[#111111]">Generate GST Invoice</label>
+                                <span class="text-[11px] text-[#666666]">Enable to compute CGST / SGST / IGST</span>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_gst" id="is_gst" value="1" {{ old('is_gst', '1') ? 'checked' : '' }} onchange="toggleGstControls(); calculateTotals()" class="sr-only peer">
-                                <div class="w-11 h-6 bg-[#E6E6E6] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#D6D6D6] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#050505]"></div>
-                            </label>
+                            <input type="checkbox" name="is_gst" id="is_gst" value="1" {{ old('is_gst', '1') ? 'checked' : '' }} onchange="toggleGstControls(); calculateTotals()"
+                                class="w-5 h-5 accent-black rounded cursor-pointer">
                         </div>
                     @else
                         <input type="hidden" name="is_gst" id="is_gst" value="0">
@@ -351,101 +453,83 @@
                                 </div>
                             </div>
                         </div>
-                    @else
-                        <input type="hidden" name="tax_rate" id="tax_rate" value="{{ $tenant->default_gst_rate ?? 18.00 }}">
                     @endif
 
-                    <!-- Tax Calculation Mode: Inclusive (MRP) vs Exclusive -->
-                    @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'tax_inclusive_toggle'))
-                        <div id="gstModeWrapper" class="sm:col-span-2 p-3 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1] space-y-2">
-                            <span class="block text-xs font-bold text-[#071426] uppercase tracking-wider">Pricing Tax Engine</span>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                <label class="flex items-center gap-2 p-2 rounded bg-white border border-[#E2E8F0] cursor-pointer hover:border-black transition">
-                                    <input type="radio" name="is_tax_inclusive" value="1" {{ old('is_tax_inclusive', $tenant->is_tax_inclusive) ? 'checked' : '' }} onchange="calculateTotals()" class="text-black focus:ring-black">
-                                    <div>
-                                        <span class="font-bold text-[#111111] block">Tax Inclusive (MRP)</span>
-                                        <span class="text-[10px] text-[#666666] block">Item price entered already includes GST</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-center gap-2 p-2 rounded bg-white border border-[#E2E8F0] cursor-pointer hover:border-black transition">
-                                    <input type="radio" name="is_tax_inclusive" value="0" {{ !old('is_tax_inclusive', $tenant->is_tax_inclusive) ? 'checked' : '' }} onchange="calculateTotals()" class="text-black focus:ring-black">
-                                    <div>
-                                        <span class="font-bold text-[#111111] block">Tax Exclusive (Base + GST)</span>
-                                        <span class="text-[10px] text-[#666666] block">GST added on top of item base price</span>
-                                    </div>
-                                </label>
-                            </div>
+                    <!-- Tax Mode -->
+                    <div id="gstModeWrapper" class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-[#111111]">Tax Calculation Mode</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_tax_inclusive" value="1" {{ old('is_tax_inclusive', ($tenant->is_tax_inclusive ?? true) ? '1' : '0') === '1' ? 'checked' : '' }} onchange="calculateTotals()" class="peer sr-only">
+                                <div class="px-3 py-2 rounded-lg border border-[#E6E6E6] text-center text-xs font-semibold text-[#666666] peer-checked:bg-[#050505] peer-checked:text-[#B7FF00] peer-checked:border-black peer-checked:font-bold transition">
+                                    Tax Inclusive (MRP)
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_tax_inclusive" value="0" {{ old('is_tax_inclusive', ($tenant->is_tax_inclusive ?? true) ? '1' : '0') === '0' ? 'checked' : '' }} onchange="calculateTotals()" class="peer sr-only">
+                                <div class="px-3 py-2 rounded-lg border border-[#E6E6E6] text-center text-xs font-semibold text-[#666666] peer-checked:bg-[#050505] peer-checked:text-[#B7FF00] peer-checked:border-black peer-checked:font-bold transition">
+                                    Tax Exclusive (+GST)
+                                </div>
+                            </label>
                         </div>
-                    @else
-                        <input type="hidden" name="is_tax_inclusive" value="{{ $tenant->is_tax_inclusive ? '1' : '0' }}">
-                    @endif
+                    </div>
 
-                    <!-- Discount -->
+                    <!-- Discount Field -->
                     @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'discount'))
                         <div>
-                            <label class="block text-xs font-semibold text-[#111111] mb-1">Discount Given (₹)</label>
-                            <input type="number" step="0.01" name="discount" id="discount" value="0.00" oninput="calculateTotals()"
-                                placeholder="0.00"
+                            <label class="block text-xs font-semibold text-[#111111] mb-1">Discount Amount (₹)</label>
+                            <input type="number" step="0.01" min="0" name="discount" id="discount" value="{{ old('discount', 0) }}" oninput="calculateTotals()"
                                 class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
                         </div>
                     @else
-                        <input type="hidden" name="discount" id="discount" value="0.00">
-                    @endif
-
-                    <!-- Amount Paid / Partial Payment (Khata) -->
-                    @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'amount_paid'))
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label for="amount_paid" class="block text-xs font-semibold text-[#111111]">Amount Paid by Customer (₹)</label>
-                                <button type="button" onclick="setFullPaid()" class="text-[11px] font-bold text-[#079455] hover:text-[#067643] hover:underline cursor-pointer">
-                                    Pay Full (₹<span id="fullPayAmt">0.00</span>)
-                                </button>
-                            </div>
-                            <input type="number" step="0.01" name="amount_paid" id="amount_paid" oninput="calculateTotals()"
-                                value="{{ old('amount_paid') }}"
-                                placeholder="Leave empty if nothing paid (₹0.00)"
-                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-bold text-[#079455] focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                            <span class="text-[10px] text-[#666666]">Leave empty if nothing paid at checkout (unpaid/credit bill).</span>
-                        </div>
-                    @else
-                        <input type="hidden" name="amount_paid" id="amount_paid" value="">
-                    @endif
-
-                    @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'due_date'))
-                        <div>
-                            <label class="block text-xs font-semibold text-[#111111] mb-1">Due Date (If Partial / Credit)</label>
-                            <input type="date" name="due_date" value="{{ old('due_date') }}"
-                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                        </div>
-                    @endif
-
-                    @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'notes'))
-                        <div>
-                            <label class="block text-xs font-semibold text-[#111111] mb-1">Remarks / Note on Bill</label>
-                            <textarea name="notes" rows="1" placeholder="Optional notes for customer..."
-                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-black"></textarea>
-                        </div>
+                        <input type="hidden" name="discount" id="discount" value="0">
                     @endif
                 </div>
+
+                <!-- Customer Payment at Checkout -->
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'amount_paid'))
+                    <div class="pt-4 border-t border-[#E6E6E6] space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-semibold text-[#111111]">
+                                Amount Paid by Customer (₹)
+                            </label>
+                            <button type="button" onclick="setFullPaid()" class="text-xs font-bold text-[#079455] hover:underline">
+                                Full Settlement (₹<span id="fullPayAmt">0.00</span>)
+                            </button>
+                        </div>
+                        <input type="number" step="0.01" min="0" name="amount_paid" id="amount_paid" value="{{ old('amount_paid') }}" oninput="calculateTotals()"
+                            placeholder="0.00 (leave blank if nothing paid)"
+                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                        <p class="text-[11px] text-[#666666]">Leave blank or enter 0 if nothing paid (records credit due / Khata). Click 'Full Settlement' above for full payment.</p>
+                    </div>
+                @endif
+
+                <!-- Invoice Notes / Terms -->
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'notes'))
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold text-[#111111] mb-1">Invoice Notes / Special Terms</label>
+                        <input type="text" name="notes" value="{{ old('notes') }}"
+                            placeholder="e.g. 7-day checking warranty on hardware. Accessories carry brand warranty."
+                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+                @endif
             </div>
 
-            <!-- Grand Total Summary & UPI Payment Preview (1 col) -->
-            <div class="bg-[#050505] text-[#E7E7E7] rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between border border-black">
-                <div>
-                    <h3 class="text-xs font-bold text-[#929292] uppercase tracking-wider border-b border-white/10 pb-2">
-                        Bill Summary
-                    </h3>
+            <!-- Sticky Summary & Checkout Card (1 col) -->
+            <div class="space-y-4">
+                <div class="card-dark p-6 rounded-2xl shadow-xl space-y-4">
+                    <span class="text-xs font-bold text-[#929292] uppercase tracking-wider block">Billing Breakdown</span>
 
-                    <div class="space-y-2 mt-4 text-xs">
+                    <div class="space-y-2.5 text-xs">
                         <div class="flex justify-between text-[#E7E7E7]">
                             <span>Items Subtotal:</span>
                             <span class="font-mono font-bold" id="summarySubtotal">₹0.00</span>
                         </div>
                         <div class="flex justify-between text-[#E7E7E7]">
                             <span>Discount:</span>
-                            <span class="font-mono text-[#B7FF00]" id="summaryDiscount">- ₹0.00</span>
+                            <span class="font-mono text-[#F04438]" id="summaryDiscount">- ₹0.00</span>
                         </div>
-                        <div class="flex justify-between text-[#E7E7E7]" id="gstTaxableRow" style="display: none;">
+                        <div class="flex justify-between text-[#929292] pt-1" id="gstTaxableRow" style="display: none;">
                             <span>Taxable Base:</span>
                             <span class="font-mono" id="summaryTaxableBase">₹0.00</span>
                         </div>
@@ -475,9 +559,13 @@
                     @endif
                 </div>
 
-                <!-- Primary Submit Action: Lime Highlight -->
-                <div class="pt-3">
-                    <button type="submit" id="submitInvoiceBtn" class="w-full py-3 btn-lime rounded-lg font-bold text-xs sm:text-sm shadow-xs min-h-[44px] flex items-center justify-center gap-2">
+                <!-- Primary Submit Actions: Draft vs Finalize -->
+                <div class="pt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="submit" name="status" value="draft" id="saveDraftBtn" class="w-full py-3 btn-secondary rounded-lg font-semibold text-xs min-h-[44px] flex items-center justify-center gap-1.5 transition">
+                        <svg class="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                        <span>Save as Draft</span>
+                    </button>
+                    <button type="submit" name="status" value="finalized" id="submitInvoiceBtn" class="w-full py-3 btn-lime rounded-lg font-bold text-xs shadow-xs min-h-[44px] flex items-center justify-center gap-1.5 transition">
                         <span>Generate Bill</span>
                     </button>
                 </div>
@@ -488,11 +576,14 @@
 
 @push('scripts')
 <script>
-    let itemIndex = 1;
+    const registeredItems = @json($inStockItems);
+    const storeStateCode = "{{ $tenant->state_code ?? '01' }}".trim();
+    const storeUpiId = "{{ $tenant->upi_id ?? '' }}";
+    const storeName = "{{ addslashes($tenant->name) }}";
+    const tenantId = "{{ $tenant->id }}";
+    const draftStorageKey = "invoiry_bill_draft_" + tenantId;
+
     let currentGrandTotal = 0;
-    const upiVpa = "{{ $tenant->upi_id ?? '' }}";
-    const shopName = "{{ $tenant->name ?? 'Invoice' }}";
-    const shopStateCode = "{{ $tenant->state_code ?: '01' }}".trim();
 
     function setFullPaid() {
         const paidInput = document.getElementById('amount_paid');
@@ -513,7 +604,7 @@
     function toggleGstControls() {
         const gstEl = document.getElementById('is_gst');
         if (!gstEl) return;
-        const isGst = gstEl.type === 'checkbox' ? gstEl.checked : (gstEl.value === '1');
+        const isGst = gstEl.checked;
         const rateWrapper = document.getElementById('gstRateWrapper');
         const modeWrapper = document.getElementById('gstModeWrapper');
         if (rateWrapper && modeWrapper) {
@@ -533,7 +624,7 @@
 
     function autoFillCustomer(selectEl) {
         const option = selectEl.options[selectEl.selectedIndex];
-        if (!option.value) return;
+        if (!option || !option.value) return;
 
         const cid = document.getElementById('customer_id'); if (cid) cid.value = option.value;
         const cname = document.getElementById('customer_name'); if (cname) cname.value = option.dataset.name || '';
@@ -541,82 +632,280 @@
         const cemail = document.getElementById('customer_email'); if (cemail) cemail.value = option.dataset.email || '';
         const cadhar = document.getElementById('customer_adhar'); if (cadhar) cadhar.value = option.dataset.adhar || '';
         const caddr = document.getElementById('customer_address'); if (caddr) caddr.value = option.dataset.address || '';
+        const cstate = document.getElementById('customer_state'); if (cstate) cstate.value = option.dataset.state || '';
+        const cstatecode = document.getElementById('customer_state_code'); if (cstatecode) cstatecode.value = option.dataset.statecode || '';
+
+        calculateTotals();
+        saveLocalDraft();
     }
 
-    function onStockItemSelect(selectEl, rowIdx) {
+    function autoFillItemRow(selectEl) {
         const row = selectEl.closest('.item-row');
-        const option = selectEl.options[selectEl.selectedIndex];
-
-        if (!option.value) {
-            if (row.querySelector('.field-item-id')) row.querySelector('.field-item-id').value = '';
+        const opt = selectEl.options[selectEl.selectedIndex];
+        if (!opt || !opt.value) {
+            saveLocalDraft();
             return;
         }
 
-        if (row.querySelector('.field-item-id')) row.querySelector('.field-item-id').value = option.value;
-        if (row.querySelector('.field-name')) row.querySelector('.field-name').value = option.dataset.name || '';
-        if (row.querySelector('.field-storage')) row.querySelector('.field-storage').value = option.dataset.storage || '';
-        if (row.querySelector('.field-color')) row.querySelector('.field-color').value = option.dataset.color || '';
-        if (row.querySelector('.field-imei1')) row.querySelector('.field-imei1').value = option.dataset.imei1 || '';
-        if (row.querySelector('.field-imei2')) row.querySelector('.field-imei2').value = option.dataset.imei2 || '';
-        if (row.querySelector('.field-serial')) row.querySelector('.field-serial').value = option.dataset.serial || '';
-        if (row.querySelector('.field-price')) row.querySelector('.field-price').value = option.dataset.price || '';
-        if (row.querySelector('.field-warranty')) row.querySelector('.field-warranty').value = option.dataset.warranty || 'no_warranty';
-        if (row.querySelector('.field-expiry')) row.querySelector('.field-expiry').value = option.dataset.expiry || '';
-
-        calculateTotals();
-    }
-
-    function addItemRow() {
-        const wrapper = document.getElementById('itemsWrapper');
-        const firstRow = document.querySelector('.item-row');
-        const clone = firstRow.cloneNode(true);
-
-        clone.dataset.index = itemIndex;
-        clone.querySelector('.item-label').innerHTML = `<span class="w-2 h-2 rounded-full bg-[#B7FF00]"></span> Item #${itemIndex + 1}`;
-        clone.querySelector('.remove-btn').classList.remove('hidden');
-
-        clone.querySelectorAll('input, select, textarea').forEach(el => {
-            const name = el.getAttribute('name');
-            if (name) {
-                el.setAttribute('name', name.replace(/\[\d+\]/, '[' + itemIndex + ']'));
-            }
-            if (el.classList.contains('stock-picker')) {
-                el.selectedIndex = 0;
-                el.setAttribute('onchange', `onStockItemSelect(this, ${itemIndex})`);
-            } else {
-                el.value = '';
+        // Prevent duplicate addition of the same inventory item in different rows
+        const selectedId = opt.value;
+        let isDuplicate = false;
+        document.querySelectorAll('.device-select').forEach(sel => {
+            if (sel !== selectEl && sel.value === selectedId) {
+                isDuplicate = true;
             }
         });
 
-        wrapper.appendChild(clone);
-        itemIndex++;
+        if (isDuplicate) {
+            showCentralFeedback('Warning: This device is already added in another row.', false);
+            selectEl.value = '';
+            return;
+        }
+
+        const nameInput = row.querySelector('.row-name');
+        const storageInput = row.querySelector('.row-storage');
+        const colorInput = row.querySelector('.row-color');
+        const imei1Input = row.querySelector('.row-imei1');
+        const imei2Input = row.querySelector('.row-imei2');
+        const serialInput = row.querySelector('.row-serial');
+        const priceInput = row.querySelector('.row-price');
+        const warrantySelect = row.querySelector('.row-warranty');
+        const warrantyDateInput = row.querySelector('.row-warranty-date');
+        const notesInput = row.querySelector('.row-notes');
+
+        if (nameInput) nameInput.value = opt.dataset.name || '';
+        if (storageInput) storageInput.value = opt.dataset.storage || '';
+        if (colorInput) colorInput.value = opt.dataset.color || '';
+        if (imei1Input) imei1Input.value = opt.dataset.imei1 || '';
+        if (imei2Input) imei2Input.value = opt.dataset.imei2 || '';
+        if (serialInput) serialInput.value = opt.dataset.serial || '';
+        if (priceInput) priceInput.value = opt.dataset.price || '';
+        if (warrantySelect) warrantySelect.value = opt.dataset.warranty || 'no_warranty';
+        if (warrantyDateInput) warrantyDateInput.value = opt.dataset.warrantyDate || '';
+        if (notesInput) notesInput.value = opt.dataset.notes || '';
+
         calculateTotals();
+        saveLocalDraft();
+    }
+
+    function addItemRow(prefillData = null) {
+        const wrapper = document.getElementById('itemsWrapper');
+        const newIndex = wrapper.querySelectorAll('.item-row').length;
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'item-row p-4 sm:p-5 rounded-xl border border-[#E6E6E6] bg-[#FAFAFA] space-y-4 relative transition hover:border-[#CCCCCC]';
+        rowDiv.dataset.index = newIndex;
+
+        let optionsHtml = '<option value="">-- Manual walk-in entry or select registered stock --</option>';
+        registeredItems.forEach(item => {
+            const isSel = prefillData && (String(prefillData.id) === String(item.id) || String(prefillData.item_id) === String(item.id));
+            optionsHtml += `<option value="${item.id}"
+                data-name="${item.item_name || ''}"
+                data-brand="${item.brand || ''}"
+                data-model="${item.model || ''}"
+                data-storage="${item.storage || item.ram_rom || ''}"
+                data-color="${item.color || ''}"
+                data-imei1="${item.imei_1 || ''}"
+                data-imei2="${item.imei_2 || ''}"
+                data-serial="${item.serial_number || ''}"
+                data-price="${item.selling_price || item.purchase_price || ''}"
+                data-warranty="${item.warranty_status || 'no_warranty'}"
+                data-warranty-date="${item.warranty_expiry_date || ''}"
+                data-notes="${item.notes || ''}"
+                ${isSel ? 'selected' : ''}>
+                ${item.item_name} &bull; ${item.brand || ''} ${item.model || ''} &bull; ${item.storage || item.ram_rom || ''} &bull; ₹${parseFloat(item.selling_price || item.purchase_price || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})} (Qty: ${item.quantity || 1})
+            </option>`;
+        });
+
+        rowDiv.innerHTML = `
+            <div class="flex items-center justify-between border-b border-[#EBEBEB] pb-2">
+                <span class="text-xs font-bold text-[#111111] uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-[#111111] text-[#B7FF00] inline-flex items-center justify-center text-[10px] font-mono row-number">${newIndex + 1}</span>
+                    <span>Device / Item Details</span>
+                </span>
+                <button type="button" onclick="removeItemRow(this)" class="text-xs text-[#DC2626] hover:underline font-semibold flex items-center gap-1 remove-btn">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>Remove</span>
+                </button>
+            </div>
+
+            <div class="p-3 bg-white rounded-lg border border-[#E6E6E6]">
+                <label class="block text-[11px] font-bold text-[#666666] uppercase mb-1">Pick Registered Device / Stock (Optional)</label>
+                <select name="items[${newIndex}][item_id]" class="device-select w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-md text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black" onchange="autoFillItemRow(this)">
+                    ${optionsHtml}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-[#111111] mb-1">Item / Device Name *</label>
+                    <input type="text" name="items[${newIndex}][item_name]" value="${prefillData?.item_name || ''}" required placeholder="e.g. Apple iPhone 15 Pro"
+                        class="row-name w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                </div>
+
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'storage_color'))
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">Storage / RAM</label>
+                        <input type="text" name="items[${newIndex}][storage]" value="${prefillData?.storage || ''}" placeholder="128GB / 8GB RAM"
+                            class="row-storage w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">Color / Finish</label>
+                        <input type="text" name="items[${newIndex}][color]" value="${prefillData?.color || ''}" placeholder="Natural Titanium"
+                            class="row-color w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+                @endif
+
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'imei_serial'))
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">IMEI 1 (15 digits)</label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" name="items[${newIndex}][imei_1]" value="${prefillData?.imei_1 || ''}" placeholder="35xxxxxxxxxxxxx"
+                                class="row-imei1 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                            <button type="button" onclick="startScanner('imei_1', this)" title="Scan IMEI 1"
+                                class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">IMEI 2 (Optional)</label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" name="items[${newIndex}][imei_2]" value="${prefillData?.imei_2 || ''}" placeholder="35xxxxxxxxxxxxx"
+                                class="row-imei2 w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                            <button type="button" onclick="startScanner('imei_2', this)" title="Scan IMEI 2"
+                                class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">Serial Number</label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" name="items[${newIndex}][serial_number]" value="${prefillData?.serial_number || ''}" placeholder="F2Lxxxxxxxxx"
+                                class="row-serial w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-black">
+                            <button type="button" onclick="startScanner('serial_number', this)" title="Scan Serial Number"
+                                class="p-2 bg-[#F2F4F7] hover:bg-[#EAECF0] rounded-lg text-[#111111] shrink-0 min-h-[38px] min-w-[38px] flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                <div>
+                    <label class="block font-semibold text-[#111111] mb-1">Qty *</label>
+                    <input type="number" step="1" min="1" name="items[${newIndex}][quantity]" value="${prefillData?.quantity || 1}" required
+                        oninput="calculateTotals()"
+                        class="row-qty w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono font-bold focus:outline-none focus:ring-1 focus:ring-black">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-[#111111] mb-1">Selling Rate (₹) *</label>
+                    <input type="number" step="0.01" min="0" name="items[${newIndex}][selling_price]" value="${prefillData?.selling_price || ''}" required
+                        placeholder="0.00" oninput="calculateTotals()"
+                        class="row-price w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg font-mono font-bold focus:outline-none focus:ring-1 focus:ring-black">
+                </div>
+
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'warranty'))
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">Warranty Term</label>
+                        <select name="items[${newIndex}][warranty_status]" class="row-warranty w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                            <option value="no_warranty" ${prefillData?.warranty_status === 'no_warranty' ? 'selected' : ''}>No Warranty</option>
+                            <option value="store_warranty" ${prefillData?.warranty_status === 'store_warranty' ? 'selected' : ''}>Store Warranty</option>
+                            <option value="company_warranty" ${prefillData?.warranty_status === 'company_warranty' ? 'selected' : ''}>Brand Warranty</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-[#111111] mb-1">Warranty Expiry</label>
+                        <input type="date" name="items[${newIndex}][warranty_expiry_date]" value="${prefillData?.warranty_expiry_date || ''}"
+                            class="row-warranty-date w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+                @endif
+
+                @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'invoice', 'notes'))
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-[#111111] mb-1">Item Notes / Remarks</label>
+                        <input type="text" name="items[${newIndex}][notes]" value="${prefillData?.notes || ''}" placeholder="Condition, included charger, adapter, etc."
+                            class="row-notes w-full px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg focus:outline-none focus:ring-1 focus:ring-black">
+                    </div>
+                @endif
+            </div>
+        `;
+
+        wrapper.appendChild(rowDiv);
+        renumberRows();
+        calculateTotals();
+        saveLocalDraft();
+        return rowDiv;
     }
 
     function removeItemRow(btn) {
-        const row = btn.closest('.item-row');
-        row.remove();
+        const wrapper = document.getElementById('itemsWrapper');
+        if (wrapper.querySelectorAll('.item-row').length <= 1) {
+            // Clear only row instead of removing
+            const row = wrapper.querySelector('.item-row');
+            row.querySelectorAll('input, textarea').forEach(el => el.value = '');
+            const sel = row.querySelector('.device-select');
+            if (sel) sel.selectedIndex = 0;
+            const qty = row.querySelector('.row-qty');
+            if (qty) qty.value = 1;
+            calculateTotals();
+            saveLocalDraft();
+            return;
+        }
+        btn.closest('.item-row').remove();
+        renumberRows();
         calculateTotals();
+        saveLocalDraft();
+    }
+
+    function renumberRows() {
+        const rows = document.querySelectorAll('#itemsWrapper .item-row');
+        rows.forEach((row, idx) => {
+            row.dataset.index = idx;
+            const badge = row.querySelector('.row-number');
+            if (badge) badge.innerText = idx + 1;
+
+            const removeBtn = row.querySelector('.remove-btn');
+            if (removeBtn) {
+                if (rows.length === 1) {
+                    removeBtn.classList.add('hidden');
+                } else {
+                    removeBtn.classList.remove('hidden');
+                }
+            }
+
+            row.querySelectorAll('input, select, textarea').forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    input.setAttribute('name', name.replace(/items\[\d+\]/, `items[${idx}]`));
+                }
+            });
+        });
     }
 
     function calculateTotals() {
         let rawSum = 0;
-        document.querySelectorAll('.field-price').forEach(input => {
-            const val = parseFloat(input.value) || 0;
-            rawSum += val;
+        document.querySelectorAll('#itemsWrapper .item-row').forEach(row => {
+            const price = parseFloat(row.querySelector('.row-price')?.value) || 0;
+            const qty = parseInt(row.querySelector('.row-qty')?.value, 10) || 1;
+            rawSum += (price * qty);
         });
 
-        const discountInput = document.getElementById('discount');
-        const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
-        const effectiveGross = Math.max(0, rawSum - discount);
-
-        const gstEl = document.getElementById('is_gst');
-        const isGst = gstEl ? (gstEl.type === 'checkbox' ? gstEl.checked : (gstEl.value === '1')) : false;
+        const isGst = document.getElementById('is_gst')?.checked ?? false;
         const taxRateInput = document.getElementById('tax_rate');
         const taxRate = isGst ? (parseFloat(taxRateInput ? taxRateInput.value : 0) || 0) : 0;
 
         const modeRadio = document.querySelector('input[name="is_tax_inclusive"]:checked') || document.querySelector('input[name="is_tax_inclusive"][type="hidden"]');
         const isTaxInclusive = modeRadio ? modeRadio.value === '1' : false;
+
+        const discountInput = document.getElementById('discount');
+        const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+        const effectiveGross = Math.max(0, rawSum - discount);
 
         let subtotal = effectiveGross;
         let tax = 0;
@@ -635,29 +924,27 @@
             }
         }
 
-        // Compliance: Customer State vs Store State
-        const custStateCodeEl = document.getElementById('customer_state_code');
-        const custStateCode = custStateCodeEl ? custStateCodeEl.value.trim() : '';
-        const isInterState = isGst && custStateCode !== '' && shopStateCode !== '' && custStateCode !== shopStateCode;
+        currentGrandTotal = grandTotal;
 
-        // Update badge
+        const custCode = document.getElementById('customer_state_code')?.value?.trim();
+        const isInterstate = isGst && custCode && storeStateCode && (custCode !== storeStateCode);
+
         const badgeText = document.getElementById('complianceText');
         const badgeEl = document.getElementById('complianceBadge');
         if (badgeText && badgeEl) {
             if (!isGst) {
                 badgeText.innerText = 'Exempt / Non-GST Sale';
                 badgeEl.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#F2F4F7] text-[#344054] border border-[#EAECF0]';
-            } else if (isInterState) {
-                badgeText.innerText = `Inter-State (Code ${custStateCode}) · IGST ${taxRate}%`;
+            } else if (isInterstate) {
+                badgeText.innerText = `Inter-State (Code ${custCode}) · IGST ${taxRate}%`;
                 badgeEl.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EFF8FF] text-[#175CD3] border border-[#B2DDFF]';
             } else {
                 const halfRate = (taxRate / 2).toFixed(1).replace(/\.0$/, '');
-                badgeText.innerText = `Intra-State (Code ${custStateCode || shopStateCode}) · CGST ${halfRate}% + SGST ${halfRate}%`;
+                badgeText.innerText = `Intra-State (Code ${custCode || storeStateCode}) · CGST ${halfRate}% + SGST ${halfRate}%`;
                 badgeEl.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#ECFDF3] text-[#027A48] border border-[#A6F4C5]';
             }
         }
 
-        // Summary Rows
         document.getElementById('summarySubtotal').innerText = '₹' + rawSum.toLocaleString('en-IN', {minimumFractionDigits: 2});
         document.getElementById('summaryDiscount').innerText = '- ₹' + discount.toLocaleString('en-IN', {minimumFractionDigits: 2});
 
@@ -678,7 +965,7 @@
             summaryTaxLabel.innerText = `GST (${taxRate}% ${isTaxInclusive ? 'Incl.' : 'Excl.'}):`;
             summaryTax.innerText = '₹' + tax.toLocaleString('en-IN', {minimumFractionDigits: 2});
 
-            if (isInterState) {
+            if (isInterstate) {
                 splitBreakdown.innerHTML = `<div>• IGST (${taxRate}%): ₹${tax.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>`;
             } else {
                 const halfRate = (taxRate / 2).toFixed(1).replace(/\.0$/, '');
@@ -695,7 +982,6 @@
             splitBreakdown.style.display = 'none';
         }
 
-        currentGrandTotal = grandTotal;
         document.getElementById('summaryGrandTotal').innerText = '₹' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2});
 
         const fullPayEl = document.getElementById('fullPayAmt');
@@ -715,86 +1001,342 @@
             dueRow.style.display = 'none';
         }
 
-        if (upiVpa) {
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${upiVpa}&pn=${encodeURIComponent(shopName)}&am=${grandTotal.toFixed(2)}&tn=Bill%20Payment&cu=INR`)}`;
-            const qrImg = document.getElementById('upiQrImg');
-            if (qrImg) qrImg.src = qrUrl;
+        const qrImg = document.getElementById('upiQrImg');
+        if (qrImg && storeUpiId) {
+            const upiString = `upi://pay?pa=${storeUpiId}&pn=${encodeURIComponent(storeName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}`;
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const picker = document.querySelector('.stock-picker');
-        if (picker && picker.value) {
-            onStockItemSelect(picker, 0);
+    // Centralized Barcode Scanner & Hardware Scanner Support
+    const centralInput = document.getElementById('centralScannerInput');
+    if (centralInput) {
+        centralInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const code = this.value.trim();
+                if (code) {
+                    processScannedCode(code);
+                    this.value = '';
+                }
+            }
+        });
+    }
+
+    function showCentralFeedback(msg, isSuccess = true) {
+        const box = document.getElementById('centralScannerFeedback');
+        const label = document.getElementById('centralScannerMsg');
+        if (!box || !label) return;
+
+        label.innerText = msg;
+        box.className = isSuccess
+            ? 'text-xs py-1.5 px-3 rounded-lg font-medium flex items-center justify-between bg-[#079455]/20 text-[#B7FF00] border border-[#079455]/40'
+            : 'text-xs py-1.5 px-3 rounded-lg font-medium flex items-center justify-between bg-[#DC2626]/20 text-[#FCA5A5] border border-[#DC2626]/40';
+        box.classList.remove('hidden');
+
+        setTimeout(() => {
+            box.classList.add('hidden');
+        }, 5000);
+    }
+
+    async function processScannedCode(code) {
+        const query = code.trim();
+        if (!query) return;
+
+        // Check if barcode already added in the bill
+        let alreadyAdded = false;
+        document.querySelectorAll('.row-imei1, .row-imei2, .row-serial').forEach(inp => {
+            if (inp.value && inp.value.trim().toLowerCase() === query.toLowerCase()) {
+                alreadyAdded = true;
+            }
+        });
+
+        if (alreadyAdded) {
+            showCentralFeedback(`Identifier "${query}" is already added to this bill.`, false);
+            return;
         }
-        toggleGstControls();
+
+        try {
+            const resp = await fetch(`/items/search-api?q=${encodeURIComponent(query)}`);
+            const data = await resp.json();
+
+            if (data && data.length > 0) {
+                const item = data[0];
+                const matchedType = item.matched_field ? item.matched_field.toUpperCase().replace('_', ' ') : 'CODE';
+
+                // Find first empty row or create new
+                let targetRow = null;
+                document.querySelectorAll('#itemsWrapper .item-row').forEach(row => {
+                    const name = row.querySelector('.row-name')?.value?.trim();
+                    const price = row.querySelector('.row-price')?.value?.trim();
+                    if (!targetRow && !name && !price) {
+                        targetRow = row;
+                    }
+                });
+
+                if (targetRow) {
+                    populateRowWithDevice(targetRow, item);
+                } else {
+                    targetRow = addItemRow(item);
+                    populateRowWithDevice(targetRow, item);
+                }
+
+                showCentralFeedback(`Matched device: ${item.item_name} via ${matchedType} (${query})`, true);
+            } else {
+                showCentralFeedback(`No device in inventory matched: "${query}". You can add manual entry.`, false);
+            }
+        } catch (err) {
+            console.error('Barcode lookup error:', err);
+            showCentralFeedback('Error searching for device. Check network connection.', false);
+        }
+    }
+
+    function populateRowWithDevice(row, item) {
+        const select = row.querySelector('.device-select');
+        if (select) {
+            select.value = item.id;
+        }
+
+        const nameInput = row.querySelector('.row-name');
+        const storageInput = row.querySelector('.row-storage');
+        const colorInput = row.querySelector('.row-color');
+        const imei1Input = row.querySelector('.row-imei1');
+        const imei2Input = row.querySelector('.row-imei2');
+        const serialInput = row.querySelector('.row-serial');
+        const priceInput = row.querySelector('.row-price');
+        const warrantySelect = row.querySelector('.row-warranty');
+        const warrantyDateInput = row.querySelector('.row-warranty-date');
+        const notesInput = row.querySelector('.row-notes');
+
+        if (nameInput) nameInput.value = item.item_name || '';
+        if (storageInput) storageInput.value = item.storage || item.ram_rom || '';
+        if (colorInput) colorInput.value = item.color || '';
+        if (imei1Input) imei1Input.value = item.imei_1 || '';
+        if (imei2Input) imei2Input.value = item.imei_2 || '';
+        if (serialInput) serialInput.value = item.serial_number || '';
+        if (priceInput) priceInput.value = item.selling_price || item.purchase_price || '';
+        if (warrantySelect) warrantySelect.value = item.warranty_status || 'no_warranty';
+        if (warrantyDateInput) warrantyDateInput.value = item.warranty_expiry_date || '';
+        if (notesInput) notesInput.value = item.notes || '';
+
         calculateTotals();
-    });
+        saveLocalDraft();
+    }
 
-    let html5QrcodeScanner = null;
+    // Camera Barcode Scanning with HTML5Qrcode
+    let html5QrCode = null;
+    let activeScanTarget = null;
+    let activeTargetInput = null;
 
-    function startScanner() {
-        document.getElementById('scannerModal').classList.remove('hidden');
-        document.getElementById('scannerModal').classList.add('flex');
+    function startScanner(target, btnEl = null) {
+        activeScanTarget = target;
+        activeTargetInput = null;
 
-        html5QrcodeScanner = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+        const modal = document.getElementById('scannerModal');
+        const title = document.getElementById('scannerModalTitle');
+        const instructions = document.getElementById('scannerModalInstructions');
 
-        html5QrcodeScanner.start(
+        if (target === 'central') {
+            title.innerText = 'Central Device Scanner';
+            instructions.innerText = 'Align camera with IMEI 1, IMEI 2, or Serial Number barcode.';
+        } else {
+            const fieldLabel = target.replace('_', ' ').toUpperCase();
+            title.innerText = `Scan ${fieldLabel}`;
+            instructions.innerText = `Align camera with ${fieldLabel} barcode on device or retail box.`;
+
+            if (btnEl) {
+                const row = btnEl.closest('.item-row');
+                if (target === 'imei_1') activeTargetInput = row.querySelector('.row-imei1');
+                if (target === 'imei_2') activeTargetInput = row.querySelector('.row-imei2');
+                if (target === 'serial_number') activeTargetInput = row.querySelector('.row-serial');
+            }
+        }
+
+        modal.classList.remove('hidden');
+
+        if (typeof Html5Qrcode === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/html5-qrcode';
+            script.onload = () => initHtml5Scanner();
+            document.head.appendChild(script);
+        } else {
+            initHtml5Scanner();
+        }
+    }
+
+    function initHtml5Scanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                startScanningInstance();
+            }).catch(() => {
+                startScanningInstance();
+            });
+        } else {
+            startScanningInstance();
+        }
+    }
+
+    function startScanningInstance() {
+        html5QrCode = new Html5Qrcode("reader");
+        const config = {
+            fps: 15,
+            qrbox: { width: 260, height: 160 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.QR_CODE
+            ]
+        };
+
+        html5QrCode.start(
             { facingMode: "environment" },
             config,
             (decodedText) => {
-                const cleanCode = decodedText.trim();
-                fetch(`/api/items/search?q=${encodeURIComponent(cleanCode)}`)
-                    .then(r => r.json())
-                    .then(items => {
-                        if (items.length > 0) {
-                            const found = items[0];
-                            const firstRow = document.querySelector('.item-row');
-                            firstRow.querySelector('.field-item-id').value = found.id;
-                            firstRow.querySelector('.field-name').value = found.item_name;
-                            firstRow.querySelector('.field-storage').value = found.storage || '';
-                            firstRow.querySelector('.field-color').value = found.color || '';
-                            firstRow.querySelector('.field-imei1').value = found.imei_1 || cleanCode;
-                            firstRow.querySelector('.field-imei2').value = found.imei_2 || '';
-                            firstRow.querySelector('.field-serial').value = found.serial_number || '';
-                            firstRow.querySelector('.field-price').value = found.selling_price || found.purchase_price;
-                            calculateTotals();
-                        } else {
-                            document.querySelector('.field-imei1').value = cleanCode;
-                        }
-                        stopScanner();
-                    })
-                    .catch(() => {
-                        document.querySelector('.field-imei1').value = cleanCode;
-                        stopScanner();
-                    });
+                handleBarcodeScanned(decodedText);
             },
             () => {}
         ).catch(err => {
-            console.error("Camera error:", err);
+            console.error('Camera init error:', err);
+            alert('Unable to access camera: ' + err);
             stopScanner();
         });
     }
 
-    function stopScanner() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(e => console.log(e));
+    function handleBarcodeScanned(code) {
+        stopScanner();
+
+        if (activeScanTarget === 'central') {
+            processScannedCode(code);
+        } else if (activeTargetInput) {
+            activeTargetInput.value = code;
+            showCentralFeedback(`Populated scanned barcode: ${code}`, true);
+            calculateTotals();
+            saveLocalDraft();
         }
-        document.getElementById('scannerModal').classList.add('hidden');
-        document.getElementById('scannerModal').classList.remove('flex');
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const invoiceForm = document.querySelector('form[action="{{ route('invoices.store') }}"]');
+    function stopScanner() {
+        const modal = document.getElementById('scannerModal');
+        if (modal) modal.classList.add('hidden');
+
+        if (html5QrCode) {
+            html5QrCode.stop().catch(() => {}).finally(() => {
+                html5QrCode = null;
+            });
+        }
+    }
+
+    // Client-Side LocalStorage Draft Persistence
+    function saveLocalDraft() {
+        try {
+            const draft = {
+                customer_id: document.getElementById('customer_id')?.value || '',
+                customer_name: document.getElementById('customer_name')?.value || '',
+                customer_phone: document.getElementById('customer_phone')?.value || '',
+                customer_email: document.getElementById('customer_email')?.value || '',
+                customer_adhar: document.getElementById('customer_adhar')?.value || '',
+                customer_address: document.getElementById('customer_address')?.value || '',
+                customer_state: document.getElementById('customer_state')?.value || '',
+                customer_state_code: document.getElementById('customer_state_code')?.value || '',
+                discount: document.getElementById('discount')?.value || '',
+                amount_paid: document.getElementById('amount_paid')?.value || '',
+                notes: document.querySelector('input[name="notes"]')?.value || '',
+                items: []
+            };
+
+            document.querySelectorAll('#itemsWrapper .item-row').forEach(row => {
+                draft.items.push({
+                    item_id: row.querySelector('.device-select')?.value || '',
+                    item_name: row.querySelector('.row-name')?.value || '',
+                    storage: row.querySelector('.row-storage')?.value || '',
+                    color: row.querySelector('.row-color')?.value || '',
+                    imei_1: row.querySelector('.row-imei1')?.value || '',
+                    imei_2: row.querySelector('.row-imei2')?.value || '',
+                    serial_number: row.querySelector('.row-serial')?.value || '',
+                    quantity: row.querySelector('.row-qty')?.value || 1,
+                    selling_price: row.querySelector('.row-price')?.value || '',
+                    warranty_status: row.querySelector('.row-warranty')?.value || 'no_warranty',
+                    warranty_expiry_date: row.querySelector('.row-warranty-date')?.value || '',
+                    notes: row.querySelector('.row-notes')?.value || ''
+                });
+            });
+
+            localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+        } catch (e) {}
+    }
+
+    function checkLocalDraft() {
+        try {
+            const saved = localStorage.getItem(draftStorageKey);
+            if (!saved) return;
+            const draft = JSON.parse(saved);
+            if (draft && draft.items && draft.items.length > 0 && draft.items.some(i => i.item_name || i.selling_price)) {
+                const currentName = document.getElementById('customer_name')?.value;
+                if (!currentName) {
+                    const alertBar = document.getElementById('draftAlertBar');
+                    if (alertBar) alertBar.classList.remove('hidden');
+                }
+            }
+        } catch (e) {}
+    }
+
+    function restoreLocalDraft() {
+        try {
+            const saved = localStorage.getItem(draftStorageKey);
+            if (!saved) return;
+            const draft = JSON.parse(saved);
+
+            if (draft.customer_id) document.getElementById('customer_id').value = draft.customer_id;
+            if (draft.customer_name) document.getElementById('customer_name').value = draft.customer_name;
+            if (draft.customer_phone && document.getElementById('customer_phone')) document.getElementById('customer_phone').value = draft.customer_phone;
+            if (draft.customer_email && document.getElementById('customer_email')) document.getElementById('customer_email').value = draft.customer_email;
+            if (draft.customer_adhar && document.getElementById('customer_adhar')) document.getElementById('customer_adhar').value = draft.customer_adhar;
+            if (draft.customer_address && document.getElementById('customer_address')) document.getElementById('customer_address').value = draft.customer_address;
+            if (draft.customer_state && document.getElementById('customer_state')) document.getElementById('customer_state').value = draft.customer_state;
+            if (draft.customer_state_code && document.getElementById('customer_state_code')) document.getElementById('customer_state_code').value = draft.customer_state_code;
+            if (draft.discount) document.getElementById('discount').value = draft.discount;
+            if (draft.amount_paid) document.getElementById('amount_paid').value = draft.amount_paid;
+            if (draft.notes && document.querySelector('input[name="notes"]')) document.querySelector('input[name="notes"]').value = draft.notes;
+
+            if (draft.items && draft.items.length > 0) {
+                const wrapper = document.getElementById('itemsWrapper');
+                wrapper.innerHTML = '';
+
+                draft.items.forEach(it => {
+                    addItemRow(it);
+                });
+            }
+
+            document.getElementById('draftAlertBar')?.classList.add('hidden');
+            calculateTotals();
+            showCentralFeedback('Draft items restored successfully!', true);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function discardLocalDraft() {
+        localStorage.removeItem(draftStorageKey);
+        document.getElementById('draftAlertBar')?.classList.add('hidden');
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.closest('#invoiceForm')) {
+            saveLocalDraft();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleGstControls();
+        calculateTotals();
+        checkLocalDraft();
+
+        const invoiceForm = document.getElementById('invoiceForm');
         if (invoiceForm) {
             invoiceForm.addEventListener('submit', function () {
-                const btn = document.getElementById('submitInvoiceBtn');
-                if (btn && !btn.disabled) {
-                    btn.disabled = true;
-                    btn.classList.add('opacity-75', 'cursor-not-allowed');
-                    btn.innerHTML = '<span>Processing Bill...</span>';
-                }
+                localStorage.removeItem(draftStorageKey);
             });
         }
     });

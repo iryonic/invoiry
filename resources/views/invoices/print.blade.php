@@ -81,8 +81,10 @@
     @php
         $tenant = $invoice->tenant;
         $customer = $invoice->customer;
-        $logoUrl = $tenant->logo_url;
+        $logoBase64 = $tenant->logo_base64;
+        $logoUrl = $logoBase64 ?: $tenant->logo_url;
         $sigBase64 = $tenant->signature_base64;
+        $sigUrl = $sigBase64 ?: $tenant->signature_url;
         $firstItem = $invoice->items->first();
     @endphp
 
@@ -389,9 +391,9 @@
                         </div>
 
                         <div class="pt-6">
-                            @if($sigBase64)
+                            @if($sigUrl)
                                 <div class="h-10 flex items-center justify-center mb-1">
-                                    <img src="{{ $sigBase64 }}" class="max-h-10 max-w-[120px] object-contain" alt="Signature">
+                                    <img src="{{ $sigUrl }}" class="max-h-10 max-w-[120px] object-contain" alt="Signature">
                                 </div>
                             @endif
                             <strong class="text-xs sm:text-sm">For {{ $tenant->name }}</strong><br>

@@ -34,6 +34,8 @@ class Item extends Model
         'serial_number',
         'condition',
         'status',
+        'quantity',
+        'is_device',
         'purchase_price',
         'selling_price',
         'warranty_status',
@@ -51,6 +53,8 @@ class Item extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'integer',
+            'is_device' => 'boolean',
             'purchase_price' => 'decimal:2',
             'selling_price' => 'decimal:2',
             'purchase_date' => 'date',
@@ -78,12 +82,17 @@ class Item extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function stockAdjustments(): HasMany
+    {
+        return $this->hasMany(StockAdjustment::class)->latest();
+    }
+
     /**
      * Scope for items currently in stock.
      */
     public function scopeInStock(Builder $query): Builder
     {
-        return $query->where('status', 'in_stock');
+        return $query->where('status', 'in_stock')->where('quantity', '>', 0);
     }
 
     /**
@@ -91,6 +100,34 @@ class Item extends Model
      */
     public function scopeSold(Builder $query): Builder
     {
-        return $query->where('status', 'sold');
+        return $query->where(function (Builder $q) {
+            $q->where('status', 'sold')->orWhere('quantity', '<=', 0);
+        });
+    }
+
+    /**
+     * Adjust stock quantity with audit tracking.
+     */
+    public function adjustStock(int $newQuantity, string $type, ?string $reason = null, ?int $userId = null, ?int $invoiceId = null): StockAdjustment
+    {
+        $newQuantity = max(0, $newQuantity);
+        $before = $this->quantity;
+        $change = $newQuantity - $before;
+
+        $this->quantity = $newQuantity;
+        $this->status = $newQuantity > 0 ? 'in_stock' : 'sold';
+        $this->save();
+
+        return StockAdjustment::create([
+            'tenant_id' => $this->tenant_id,
+            'item_id' => $this->id,
+            'user_id' => $userId ?? auth()->id(),
+            'invoice_id' => $invoiceId,
+            'adjustment_type' => $type,
+            'quantity_change' => $change,
+            'quantity_before' => $before,
+            'quantity_after' => $newQuantity,
+            'reason' => $reason,
+        ]);
     }
 }

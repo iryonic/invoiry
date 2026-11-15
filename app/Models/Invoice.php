@@ -35,6 +35,7 @@ class Invoice extends Model
         'amount_paid',
         'payment_method',
         'payment_status',
+        'status',
         'is_gst',
         'tax_rate',
         'is_tax_inclusive',
@@ -202,5 +203,25 @@ class Invoice extends Model
         };
 
         return trim($convertNumber($amount)).' Rupees Only';
+    }
+
+    public function isDraft(): bool
+    {
+        return ($this->status ?? 'finalized') === 'draft';
+    }
+
+    public function isFinalized(): bool
+    {
+        return ($this->status ?? 'finalized') === 'finalized';
+    }
+
+    public function isCancelled(): bool
+    {
+        return ($this->status ?? 'finalized') === 'cancelled';
+    }
+
+    public function stockAdjustments(): HasMany
+    {
+        return $this->hasMany(StockAdjustment::class);
     }
 }

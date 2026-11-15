@@ -16,8 +16,8 @@
         $whatsAppText = urlencode("Hello {$customer->name}, thank you for your purchase from {$tenant->name}!\n\nInvoice: {$invoice->invoice_number}\nAmount: ₹" . number_format($invoice->grand_total, 2) . "\nDate: " . $invoice->invoice_date->format('d M Y') . "\n\nWe appreciate your business!");
         $whatsAppLink = "https://wa.me/91" . preg_replace('/[^0-9]/', '', $customer->phone) . "?text={$whatsAppText}";
         $firstItem = $invoice->items->first();
-        $logoUrl = $tenant->logo_url;
-        $sigUrl = $tenant->signature_url;
+        $logoUrl = $tenant->logo_base64 ?: $tenant->logo_url;
+        $sigUrl = $tenant->signature_base64 ?: $tenant->signature_url;
     @endphp
 
     <!-- Top Action Bar -->
@@ -332,9 +332,9 @@
                     </div>
 
                     <div class="pt-6">
-                        @if($tenant->signature_url)
+                        @if($sigUrl)
                             <div class="h-10 flex items-center justify-center mb-1">
-                                <img src="{{ $tenant->signature_url }}" class="max-h-10 max-w-[120px] object-contain" alt="Signature">
+                                <img src="{{ $sigUrl }}" class="max-h-10 max-w-[120px] object-contain" alt="Signature">
                             </div>
                         @endif
                         <strong class="text-xs sm:text-sm">For {{ $tenant->name }}</strong><br>
@@ -373,20 +373,34 @@
                             class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
                     </div>
 
-                    <div>
-                        <label for="payment_method" class="block text-xs font-semibold text-[#666666] mb-1">Payment Method *</label>
-                        <select id="payment_method" name="payment_method" required class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
-                            <option value="cash">Cash</option>
-                            <option value="upi">UPI (GPay, PhonePe, Paytm)</option>
-                            <option value="card">Debit / Credit Card</option>
-                            <option value="bank_transfer">Net Banking / NEFT</option>
-                        </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="payment_date" class="block text-xs font-semibold text-[#666666] mb-1">Payment Date *</label>
+                            <input type="date" id="payment_date" name="payment_date" value="{{ date('Y-m-d') }}" required
+                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
+                        </div>
+                        <div>
+                            <label for="payment_method" class="block text-xs font-semibold text-[#666666] mb-1">Payment Method *</label>
+                            <select id="payment_method" name="payment_method" required class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI (GPay, PhonePe, Paytm)</option>
+                                <option value="card">Debit / Credit Card</option>
+                                <option value="bank_transfer">Net Banking / NEFT</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div>
-                        <label for="payment_notes" class="block text-xs font-semibold text-[#666666] mb-1">Payment Reference / Notes</label>
-                        <input type="text" id="payment_notes" name="notes" placeholder="e.g. UTR / Transaction ID"
-                            class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="payment_reference_id" class="block text-xs font-semibold text-[#666666] mb-1">Reference / UTR</label>
+                            <input type="text" id="payment_reference_id" name="reference_id" placeholder="e.g. UTR / Txn #12345"
+                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
+                        </div>
+                        <div>
+                            <label for="payment_notes" class="block text-xs font-semibold text-[#666666] mb-1">Payment Notes</label>
+                            <input type="text" id="payment_notes" name="notes" placeholder="Optional remark"
+                                class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[44px]">
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#E6E6E6]">

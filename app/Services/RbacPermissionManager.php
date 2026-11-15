@@ -43,6 +43,7 @@ class RbacPermissionManager
                     'view' => 'View Devices & Stock Catalog',
                     'create' => 'Inward Stock / Add Devices',
                     'edit' => 'Edit Device Details & Pricing',
+                    'adjust_stock' => 'Adjust Stock Quantities & View Movement History',
                     'delete' => 'Delete Stock Items',
                 ],
             ],

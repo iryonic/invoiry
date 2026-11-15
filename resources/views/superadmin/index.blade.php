@@ -46,7 +46,6 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Subscribed Stores</span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#ECFDF3] text-[#027A48] font-bold">{{ $activeTenants }} active</span>
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight">{{ $totalTenants }}</div>
@@ -58,7 +57,7 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Platform GMV</span>
-                <span class="text-[11px] font-mono text-[#929292]">Gross Volume</span>
+               
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight font-mono">₹{{ number_format($totalGmv, 0) }}</div>
@@ -70,7 +69,7 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Total Invoices</span>
-                <span class="w-2 h-2 rounded-full bg-[#079455]"></span>
+               
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight font-mono">{{ number_format($totalInvoices) }}</div>
@@ -82,7 +81,7 @@
         <div class="card-surface p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
             <div class="flex items-center justify-between text-[#666666]">
                 <span class="text-xs font-semibold uppercase tracking-wider">Tracked Devices</span>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#F2F4F7] text-[#344054]">{{ $totalUsers }} users</span>
+                
             </div>
             <div class="mt-3">
                 <div class="text-2xl sm:text-[26px] font-bold text-[#111111] tracking-tight font-mono">{{ number_format($totalItemsTracked) }}</div>

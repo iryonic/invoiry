@@ -131,7 +131,10 @@
 
                         <div class="text-right flex-shrink-0">
                             @if($item->status === 'in_stock')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">In Stock</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">
+                                    <span>In Stock</span>
+                                    <span class="font-mono">({{ $item->quantity }})</span>
+                                </span>
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold badge-neutral">Sold</span>
                             @endif
@@ -142,7 +145,7 @@
 
                     <div class="flex items-center justify-between pt-2 border-t border-[#E6E6E6] text-xs">
                         <span class="text-[11px] text-[#929292]">
-                            {{ $item->supplier ? $item->supplier->name : 'Walk-in' }} &bull; {{ $item->purchase_date->format('d M Y') }}
+                            {{ $item->supplier ? $item->supplier->name : 'Walk-in' }} &bull; {{ $item->purchase_date?->format('d M Y') ?? 'N/A' }}
                         </span>
 
                         <div class="flex items-center gap-2">
@@ -219,11 +222,14 @@
                                     ₹{{ number_format($item->purchase_price, 2) }}
                                 </td>
                                 <td class="py-3.5 px-4 text-[#666666]">
-                                    {{ $item->purchase_date->format('d M Y') }}
+                                    {{ $item->purchase_date?->format('d M Y') ?? '-' }}
                                 </td>
                                 <td class="py-3.5 px-4">
                                     @if($item->status === 'in_stock')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">In Stock</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">
+                                            <span>In Stock</span>
+                                            <span class="font-mono">({{ $item->quantity }})</span>
+                                        </span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold badge-neutral">Sold</span>
                                     @endif

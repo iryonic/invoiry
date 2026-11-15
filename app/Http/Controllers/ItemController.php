@@ -95,6 +95,7 @@ class ItemController extends Controller
             'warranty_expiry_date' => ['nullable', 'date'],
             'purchase_date' => ['nullable', 'date'],
             'payment_method' => ['nullable', 'string'],
+            'quantity' => ['nullable', 'integer', 'min:0'],
             'remark' => ['nullable', 'string'],
 
             // Optional Inline Supplier fields
@@ -159,6 +160,8 @@ class ItemController extends Controller
                     'serial_number' => $validated['serial_number'] ?? null,
                     'condition' => $validated['condition'],
                     'status' => 'in_stock',
+                    'quantity' => max(1, (int) ($validated['quantity'] ?? 1)),
+                    'is_device' => true,
                     'purchase_price' => $validated['purchase_price'],
                     'selling_price' => $validated['selling_price'] ?? null,
                     'warranty_status' => $validated['warranty_status'],
@@ -216,9 +219,18 @@ class ItemController extends Controller
             'warranty_expiry_date' => ['nullable', 'date'],
             'purchase_date' => ['required', 'date'],
             'payment_method' => ['required', 'in:cash,upi,bank'],
+            'quantity' => ['nullable', 'integer', 'min:0'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'remark' => ['nullable', 'string'],
         ]);
+
+        if (isset($validated['quantity'])) {
+            if ((int) $validated['quantity'] === 0 && $validated['status'] === 'in_stock') {
+                $validated['status'] = 'sold';
+            } elseif ((int) $validated['quantity'] > 0 && $validated['status'] === 'sold') {
+                $validated['status'] = 'in_stock';
+            }
+        }
 
         $item->update($validated);
 
@@ -254,6 +266,32 @@ class ItemController extends Controller
             return response()->json([]);
         }
 
+        // 1. Try exact barcode identifier match first (IMEI 1, IMEI 2, Serial Number)
+        $exactItem = Item::where('tenant_id', $tenant->id)
+            ->inStock()
+            ->where(function ($query) use ($q) {
+                $query->where('imei_1', $q)
+                    ->orWhere('imei_2', $q)
+                    ->orWhere('serial_number', $q);
+            })
+            ->first();
+
+        if ($exactItem) {
+            $matchedField = 'serial_number';
+            if ($exactItem->imei_1 === $q) {
+                $matchedField = 'imei_1';
+            } elseif ($exactItem->imei_2 === $q) {
+                $matchedField = 'imei_2';
+            }
+
+            $itemArr = $exactItem->toArray();
+            $itemArr['matched_field'] = $matchedField;
+            $itemArr['is_exact_match'] = true;
+
+            return response()->json([$itemArr]);
+        }
+
+        // 2. Fallback to broad partial match
         $items = Item::where('tenant_id', $tenant->id)
             ->inStock()
             ->where(function ($query) use ($q) {
@@ -264,7 +302,21 @@ class ItemController extends Controller
                     ->orWhere('brand', 'like', "%{$q}%");
             })
             ->take(10)
-            ->get();
+            ->get()
+            ->map(function ($it) use ($q) {
+                $arr = $it->toArray();
+                $arr['matched_field'] = 'general';
+                $arr['is_exact_match'] = false;
+                if (! empty($it->imei_1) && stripos($it->imei_1, $q) !== false) {
+                    $arr['matched_field'] = 'imei_1';
+                } elseif (! empty($it->imei_2) && stripos($it->imei_2, $q) !== false) {
+                    $arr['matched_field'] = 'imei_2';
+                } elseif (! empty($it->serial_number) && stripos($it->serial_number, $q) !== false) {
+                    $arr['matched_field'] = 'serial_number';
+                }
+
+                return $arr;
+            });
 
         return response()->json($items);
     }

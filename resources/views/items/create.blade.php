@@ -194,6 +194,12 @@
                     </div>
                 @endif
 
+                <div>
+                    <label class="block text-xs font-semibold text-[#111111] mb-1">Initial Stock Quantity *</label>
+                    <input type="number" min="1" step="1" name="quantity" value="{{ old('quantity', 1) }}" required
+                        class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                </div>
+
                 @if(\App\Services\DynamicFormConfig::isFieldVisible($tenant, 'item', 'purchase_date'))
                     <div>
                         <label class="block text-xs font-semibold text-[#111111] mb-1">Purchase Date *</label>

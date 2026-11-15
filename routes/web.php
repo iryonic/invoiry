@@ -9,10 +9,12 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\SuperAdmin\BrochureController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -132,14 +134,21 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/items/bulk', [ItemController::class, 'bulkAction'])->name('items.bulk')->middleware('permission:items.view');
     Route::get('/items/create', [ItemController::class, 'create'])->name('items.create')->middleware('permission:items.create');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('permission:items.create');
+    Route::get('/items/search-api', [ItemController::class, 'searchApi'])->name('items.search-api')->middleware('permission:items.view');
+    Route::get('/api/items/search', [ItemController::class, 'searchApi'])->name('api.items.search')->middleware('permission:items.view');
     Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show')->middleware('permission:items.view');
     Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit')->middleware('permission:items.edit');
     Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update')->middleware('permission:items.edit');
     Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('permission:items.delete');
-    Route::get('/api/items/search', [ItemController::class, 'searchApi'])->name('api.items.search')->middleware('permission:items.view');
+
+    // Dedicated Device Stock Management Ledger
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index')->middleware('permission:items.view');
+    Route::post('/stock/{item}/adjust', [StockController::class, 'adjust'])->name('stock.adjust')->middleware('permission:items.edit');
+    Route::get('/stock/{item}/history', [StockController::class, 'history'])->name('stock.history')->middleware('permission:items.view');
 
     // Invoices / Sell Items
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index')->middleware('permission:invoices.view');
+    Route::post('/invoices/bulk', [InvoiceController::class, 'bulkAction'])->name('invoices.bulk')->middleware('permission:invoices.view');
     Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create')->middleware('permission:invoices.create');
     Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store')->middleware('permission:invoices.create');
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show')->middleware('permission:invoices.view');
@@ -185,3 +194,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/lock', [AuthController::class, 'lock'])->name('lock');
     Route::post('/unlock', [AuthController::class, 'unlock'])->name('unlock');
 });
+
+// Public Storage Fallback for environments where symlinks are restricted or blocked
+Route::get('/storage/{path}', function (string $path) {
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->where('path', '.*')->name('storage.fallback');

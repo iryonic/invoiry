@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\DynamicFormConfig;
@@ -873,5 +874,256 @@ class InvoiceSystemTest extends TestCase
 
         // Ensure no payment record was created
         $this->assertEquals(0, $invoice->payments()->count());
+    }
+
+    public function test_stock_management_page_and_stock_adjustments(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $stockItem = Item::where('tenant_id', $user->tenant_id)->first();
+        $stockItem->update(['quantity' => 10, 'status' => 'in_stock']);
+
+        // View stock page
+        $response = $this->actingAs($user)->get(route('stock.index'));
+        $response->assertOk();
+        $response->assertSee('Stock Management');
+
+        // Increase stock
+        $adjustResp = $this->actingAs($user)->post(route('stock.adjust', $stockItem), [
+            'action' => 'increase',
+            'amount' => 5,
+            'reason' => 'Restock shipment received',
+        ]);
+        $adjustResp->assertRedirect();
+        $this->assertEquals(15, $stockItem->fresh()->quantity);
+
+        // Decrease stock
+        $this->actingAs($user)->post(route('stock.adjust', $stockItem), [
+            'action' => 'decrease',
+            'amount' => 3,
+            'reason' => 'Transfer to branch',
+        ]);
+        $this->assertEquals(12, $stockItem->fresh()->quantity);
+
+        // Set absolute stock
+        $this->actingAs($user)->post(route('stock.adjust', $stockItem), [
+            'action' => 'set',
+            'amount' => 8,
+            'reason' => 'Physical count audit',
+        ]);
+        $this->assertEquals(8, $stockItem->fresh()->quantity);
+
+        // Check history JSON API
+        $historyResp = $this->actingAs($user)->get(route('stock.history', $stockItem));
+        $historyResp->assertOk();
+        $historyResp->assertJsonFragment(['reason' => 'Physical count audit']);
+    }
+
+    public function test_can_edit_invoice_and_reconcile_stock_without_duplicate_deduction(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $itemA = Item::create([
+            'tenant_id' => $user->tenant_id,
+            'item_name' => 'Device Alpha',
+            'brand' => 'BrandA',
+            'model' => 'Alpha 1',
+            'imei_1' => '999888777666551',
+            'condition' => 'new',
+            'status' => 'in_stock',
+            'quantity' => 5,
+            'purchase_price' => 10000,
+            'selling_price' => 15000,
+            'purchase_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ]);
+
+        $itemB = Item::create([
+            'tenant_id' => $user->tenant_id,
+            'item_name' => 'Device Beta',
+            'brand' => 'BrandB',
+            'model' => 'Beta 2',
+            'imei_1' => '999888777666552',
+            'condition' => 'new',
+            'status' => 'in_stock',
+            'quantity' => 10,
+            'purchase_price' => 20000,
+            'selling_price' => 25000,
+            'purchase_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ]);
+
+        // Create initial invoice with item A
+        $this->actingAs($user)->post(route('invoices.store'), [
+            'invoice_date' => now()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'is_gst' => 0,
+            'discount' => 0,
+            'amount_paid' => 15000,
+            'customer_name' => 'Customer Alpha',
+            'customer_phone' => '9419112233',
+            'items' => [
+                [
+                    'item_id' => $itemA->id,
+                    'item_name' => $itemA->item_name,
+                    'selling_price' => 15000,
+                    'warranty_status' => 'no_warranty',
+                ],
+            ],
+        ]);
+
+        $invoice = Invoice::orderByDesc('id')->first();
+        $this->assertEquals(4, $itemA->fresh()->quantity); // Reduced from 5 to 4
+
+        // View edit page
+        $editView = $this->actingAs($user)->get(route('invoices.edit', $invoice));
+        $editView->assertOk();
+        $editView->assertSee('Edit Invoice');
+
+        // Update invoice: swap item A for item B
+        $updateResp = $this->actingAs($user)->put(route('invoices.update', $invoice), [
+            'invoice_date' => now()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'is_gst' => 0,
+            'discount' => 0,
+            'amount_paid' => 25000,
+            'customer_name' => 'Customer Alpha Updated',
+            'customer_phone' => '9419112233',
+            'status' => 'finalized',
+            'items' => [
+                [
+                    'item_id' => $itemB->id,
+                    'item_name' => $itemB->item_name,
+                    'selling_price' => 25000,
+                    'warranty_status' => 'no_warranty',
+                ],
+            ],
+        ]);
+        $updateResp->assertRedirect(route('invoices.show', $invoice));
+
+        // Ensure Item A stock was restored to 5, and Item B stock was deducted from 10 to 9
+        $this->assertEquals(5, $itemA->fresh()->quantity);
+        $this->assertEquals(9, $itemB->fresh()->quantity);
+    }
+
+    public function test_invoices_bulk_actions_and_stock_restoration(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $item = Item::create([
+            'tenant_id' => $user->tenant_id,
+            'item_name' => 'Bulk Test Item',
+            'brand' => 'Test',
+            'model' => 'Bulk 1',
+            'imei_1' => '111222333444555',
+            'condition' => 'new',
+            'status' => 'in_stock',
+            'quantity' => 10,
+            'purchase_price' => 5000,
+            'selling_price' => 8000,
+            'purchase_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ]);
+
+        // Create invoice
+        $this->actingAs($user)->post(route('invoices.store'), [
+            'invoice_date' => now()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'is_gst' => 0,
+            'discount' => 0,
+            'amount_paid' => 0,
+            'customer_name' => 'Bulk Customer',
+            'customer_phone' => '9419223344',
+            'items' => [
+                [
+                    'item_id' => $item->id,
+                    'item_name' => $item->item_name,
+                    'selling_price' => 8000,
+                    'warranty_status' => 'no_warranty',
+                ],
+            ],
+        ]);
+        $invoice = Invoice::orderByDesc('id')->first();
+        $this->assertEquals(9, $item->fresh()->quantity);
+
+        // Bulk mark cancelled
+        $cancelResp = $this->actingAs($user)->post(route('invoices.bulk'), [
+            'action' => 'mark_cancelled',
+            'ids' => [$invoice->id],
+        ]);
+        $cancelResp->assertRedirect();
+        $this->assertEquals('cancelled', $invoice->fresh()->status);
+        $this->assertEquals(10, $item->fresh()->quantity); // Stock restored!
+
+        // Bulk mark paid
+        $paidResp = $this->actingAs($user)->post(route('invoices.bulk'), [
+            'action' => 'mark_paid',
+            'ids' => [$invoice->id],
+        ]);
+        $paidResp->assertRedirect();
+        $this->assertEquals('paid', $invoice->fresh()->payment_status);
+
+        // Bulk delete
+        $delResp = $this->actingAs($user)->post(route('invoices.bulk'), [
+            'action' => 'delete',
+            'ids' => [$invoice->id],
+        ]);
+        $delResp->assertRedirect();
+        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+    }
+
+    public function test_payment_date_defaults_gracefully_when_recording_payment(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $invoice = Invoice::where('tenant_id', $user->tenant_id)->where('payment_status', '!=', 'paid')->first();
+
+        // Omit payment_date to test default fallback
+        $response = $this->actingAs($user)->post(route('invoices.payments.store', $invoice), [
+            'amount' => 500,
+            'payment_method' => 'bank_transfer',
+            'reference_id' => 'UTR123456789',
+            'notes' => 'Settled via NEFT',
+        ]);
+
+        $response->assertRedirect();
+        $payment = Payment::where('invoice_id', $invoice->id)->orderByDesc('id')->first();
+        $this->assertNotNull($payment);
+        $this->assertEquals(now()->toDateString(), $payment->payment_date->toDateString());
+        $this->assertEquals('bank', $payment->payment_method);
+        $this->assertEquals('UTR123456789', $payment->reference_id);
+    }
+
+    public function test_barcode_search_api_matches_imei_and_serial(): void
+    {
+        $user = User::where('email', 'freetrial@gmail.com')->first();
+        $item = Item::create([
+            'tenant_id' => $user->tenant_id,
+            'item_name' => 'Barcode Search Target',
+            'brand' => 'SearchBrand',
+            'model' => 'SearchModel',
+            'imei_1' => '888777666555444',
+            'imei_2' => '888777666555445',
+            'serial_number' => 'SERIAL-TARGET-99',
+            'condition' => 'new',
+            'status' => 'in_stock',
+            'quantity' => 1,
+            'purchase_price' => 12000,
+            'selling_price' => 16000,
+            'purchase_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ]);
+
+        // Search by Serial Number
+        $respSerial = $this->actingAs($user)->getJson('/items/search-api?q=SERIAL-TARGET-99');
+        $respSerial->assertOk();
+        $data = $respSerial->json();
+        $this->assertNotEmpty($data);
+        $this->assertEquals($item->id, $data[0]['id']);
+        $this->assertEquals('serial_number', $data[0]['matched_field']);
+
+        // Search by IMEI 2
+        $respImei2 = $this->actingAs($user)->getJson('/items/search-api?q=888777666555445');
+        $respImei2->assertOk();
+        $data2 = $respImei2->json();
+        $this->assertNotEmpty($data2);
+        $this->assertEquals($item->id, $data2[0]['id']);
+        $this->assertEquals('imei_2', $data2[0]['matched_field']);
     }
 }

@@ -89,9 +89,9 @@
                         <div class="flex items-center gap-2">
                             <span class="text-sm font-bold text-[#111111]">Show Quick Evaluation Roles on Login Screen</span>
                             @if($settings['show_login_demo_credentials'])
-                                <span class="badge-paid">Currently Visible</span>
+                                <span class="badge-paid">Visible</span>
                             @else
-                                <span class="badge-unpaid">Currently Hidden (Production)</span>
+                                <span class="badge-unpaid">Hidden</span>
                             @endif
                         </div>
                         <p class="text-xs text-[#666666] max-w-xl">

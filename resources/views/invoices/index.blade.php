@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sales Ledger · Invoices')
+@section('title', 'Sales Ledger • Invoices')
 @section('page-title', 'Invoices')
 @section('page-subtitle', 'Chronological sales registry, payment statuses, and invoice documents')
 
@@ -10,7 +10,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight"> Invoices</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">Invoices</h2>
             <p class="text-xs sm:text-sm text-[#666666] mt-0.5">Track all counter transactions, customer settlements, and payment states</p>
         </div>
 
@@ -52,10 +52,12 @@
 
             <div>
                 <select name="status" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black min-h-[40px]">
-                    <option value="all">All Payment Statuses</option>
+                    <option value="all">All Statuses</option>
                     <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>Paid in Full</option>
                     <option value="partial" {{ request('status') === 'partial' ? 'selected' : '' }}>Partial / Due</option>
                     <option value="unpaid" {{ request('status') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                    <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft Invoices</option>
+                    <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
             </div>
 
@@ -91,6 +93,14 @@
             </a>
         </div>
     @else
+        <!-- Mobile Select All Bar -->
+        <div class="flex items-center justify-between p-3 bg-white border border-[#E6E6E6] rounded-xl text-xs md:hidden shadow-2xs">
+            <label class="flex items-center gap-2.5 font-bold text-[#111111] cursor-pointer">
+                <input type="checkbox" data-bulk-select-all class="rounded border-[#D0D5DD] text-black focus:ring-black w-4 h-4">
+                <span>Select All on Page</span>
+            </label>
+        </div>
+
         <!-- Mobile Card List -->
         <div class="block md:hidden space-y-3">
             @foreach($invoices as $inv)
@@ -101,29 +111,38 @@
                 @endphp
                 <div class="card-surface p-4 space-y-3 shadow-2xs">
                     <div class="flex items-start justify-between gap-2">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
-                                <a href="{{ route('invoices.show', $inv) }}" class="font-mono text-xs font-bold text-[#111111] hover:underline">
-                                    {{ $inv->invoice_number }}
-                                </a>
-                                @if($inv->payment_status === 'paid')
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">Paid</span>
-                                @elseif($inv->payment_status === 'partial')
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-due">Due ₹{{ number_format($inv->amount_due, 0) }}</span>
-                                @else
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-unpaid">Unpaid</span>
-                                @endif
-                            </div>
+                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                            <label class="mt-0.5 cursor-pointer p-1 -m-1 inline-flex items-center shrink-0">
+                                <input type="checkbox" data-bulk-item value="{{ $inv->id }}" class="rounded border-[#D0D5DD] text-black focus:ring-black w-4 h-4">
+                            </label>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <a href="{{ route('invoices.show', $inv) }}" class="font-mono text-xs font-bold text-[#111111] hover:underline">
+                                        {{ $inv->invoice_number }}
+                                    </a>
+                                    @if($inv->isDraft())
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF0C7] text-[#B54708] border border-[#FEDF89]">Draft</span>
+                                    @elseif($inv->isCancelled())
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEE4E2] text-[#B42318] border border-[#FECDCA]">Cancelled</span>
+                                    @elseif($inv->payment_status === 'paid')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">Paid</span>
+                                    @elseif($inv->payment_status === 'partial')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-due">Due ₹{{ number_format($inv->amount_due, 0) }}</span>
+                                    @else
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-unpaid">Unpaid</span>
+                                    @endif
+                                </div>
 
-                            <h4 class="text-sm font-bold text-[#111111] mt-1">
-                                {{ $inv->customer->name }}
-                                <span class="text-xs text-[#929292] font-normal font-mono">({{ $inv->customer->phone }})</span>
-                            </h4>
+                                <h4 class="text-sm font-bold text-[#111111] mt-1">
+                                    {{ $inv->customer->name }}
+                                    <span class="text-xs text-[#929292] font-normal font-mono">({{ $inv->customer->phone }})</span>
+                                </h4>
 
-                            <div class="text-xs text-[#666666] mt-1">
-                                @foreach($inv->items as $it)
-                                    <div>{{ $it->item_name }} ({{ $it->storage }}) &bull; <span class="font-mono text-[11px] text-[#929292]">IMEI: {{ $it->imei_1 ?: 'N/A' }}</span></div>
-                                @endforeach
+                                <div class="text-xs text-[#666666] mt-1">
+                                    @foreach($inv->items as $it)
+                                        <div>{{ $it->item_name }} ({{ $it->storage }}) &bull; <span class="font-mono text-[11px] text-[#929292]">IMEI: {{ $it->imei_1 ?: 'N/A' }}</span></div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
@@ -134,12 +153,18 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between pt-2.5 border-t border-[#E6E6E6] text-xs">
-                        <a href="{{ route('invoices.show', $inv) }}" class="font-semibold text-[#111111] hover:underline min-h-[36px] inline-flex items-center">
-                            View Bill 
-                        </a>
+                    <div class="flex items-center justify-between pt-2.5 border-t border-[#E6E6E6] text-xs gap-1.5 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('invoices.show', $inv) }}" class="font-semibold text-[#111111] hover:underline min-h-[36px] inline-flex items-center">
+                                View Bill
+                            </a>
+                            <a href="{{ route('invoices.edit', $inv) }}" class="text-xs font-semibold text-[#666666] hover:text-black min-h-[36px] inline-flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                <span>Edit</span>
+                            </a>
+                        </div>
 
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 flex-wrap">
                             <a href="{{ route('invoices.print', $inv) }}" target="_blank" class="px-2.5 py-1.5 btn-lime rounded-lg text-xs font-bold min-h-[36px] inline-flex items-center gap-1" title="Direct Print">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                 <span>Print</span>
@@ -168,6 +193,9 @@
                 <table class="w-full text-left text-xs">
                     <thead class="bg-[#F7F7F6] border-b border-[#E6E6E6] text-[#666666] uppercase tracking-wider font-semibold">
                         <tr>
+                            <th class="py-3 px-3 w-10 text-center">
+                                <input type="checkbox" data-bulk-select-all class="rounded border-[#D0D5DD] text-black focus:ring-black">
+                            </th>
                             <th class="py-3 px-4">Invoice #</th>
                             <th class="py-3 px-4">Customer</th>
                             <th class="py-3 px-4">Sold Items & IMEI</th>
@@ -186,6 +214,9 @@
                                 $whatsAppLink = "https://wa.me/91" . preg_replace('/[^0-9]/', '', $inv->customer->phone) . "?text={$whatsAppText}";
                             @endphp
                             <tr class="hover:bg-[#F7F7F6]/80 transition">
+                                <td class="py-3.5 px-3 text-center">
+                                    <input type="checkbox" data-bulk-item value="{{ $inv->id }}" class="rounded border-[#D0D5DD] text-black focus:ring-black">
+                                </td>
                                 <td class="py-3 px-4 font-mono font-bold">
                                     <a href="{{ route('invoices.show', $inv) }}" class="hover:underline text-[#111111]">
                                         {{ $inv->invoice_number }}
@@ -214,7 +245,11 @@
                                     {{ $inv->invoice_date->format('d M Y') }}
                                 </td>
                                 <td class="py-3 px-4">
-                                    @if($inv->payment_status === 'paid')
+                                    @if($inv->isDraft())
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF0C7] text-[#B54708] border border-[#FEDF89]">Draft</span>
+                                    @elseif($inv->isCancelled())
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEE4E2] text-[#B42318] border border-[#FECDCA]">Cancelled</span>
+                                    @elseif($inv->payment_status === 'paid')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-paid">Paid</span>
                                     @elseif($inv->payment_status === 'partial')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold badge-due">Due ₹{{ number_format($inv->amount_due, 0) }}</span>
@@ -224,6 +259,9 @@
                                 </td>
                                 <td class="py-3 px-4 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('invoices.edit', $inv) }}" class="p-1.5 text-[#111111] hover:bg-[#F2F4F7] rounded" title="Edit Invoice">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </a>
                                         <a href="{{ route('invoices.show', $inv) }}" class="p-1.5 text-[#666666] hover:text-[#111111] rounded hover:bg-[#F2F4F7]" title="View Invoice">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         </a>
@@ -254,5 +292,22 @@
             @endif
         </div>
     @endif
+
+    <!-- Reusable Bulk Action Bar for Invoices -->
+    <x-bulk-action-bar :action="route('invoices.bulk')" id="bulk-invoices-form">
+        @if(auth()->user()->hasPermission('invoices.edit'))
+            <button type="button" data-bulk-action="mark_paid" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#B7FF00] font-bold text-xs transition active:scale-95 shrink-0">
+                Mark Paid
+            </button>
+            <button type="button" data-bulk-action="mark_cancelled" data-confirm="Are you sure you want to cancel :count selected invoice(s)? Item stock will be returned to inventory." data-confirm-title="Cancel Invoices" data-confirm-variant="warning" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition active:scale-95 shrink-0">
+                Mark Cancelled
+            </button>
+        @endif
+        @if(auth()->user()->hasPermission('invoices.delete'))
+            <button type="button" data-bulk-action="delete" data-confirm="Are you sure you want to delete :count selected invoice(s)? Item stock will be restored." data-confirm-title="Delete Invoices" data-confirm-variant="danger" class="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition shadow-xs active:scale-95 shrink-0">
+                Delete
+            </button>
+        @endif
+    </x-bulk-action-bar>
 </div>
 @endsection
