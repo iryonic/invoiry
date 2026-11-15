@@ -170,11 +170,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{invoice}/thermal', [InvoiceController::class, 'thermal'])->name('invoices.thermal')->middleware('permission:invoices.print');
     Route::post('/invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment'])->name('invoices.payment')->middleware('permission:invoices.record_payments');
     Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store')->middleware('permission:invoices.record_payments');
-    Route::get('/invoices/{invoice}/preview-email', [InvoiceMailController::class, 'preview'])->name('invoices.mail.preview')->middleware('permission:invoices.view');
-    Route::post('/invoices/{invoice}/send-email', [InvoiceMailController::class, 'send'])->name('invoices.mail.send')->middleware('permission:invoices.view');
-    Route::post('/invoices/{invoice}/payments/{payment}/send-receipt', [InvoiceMailController::class, 'sendReceipt'])->name('invoices.mail.receipt')->middleware('permission:invoices.view');
-    Route::post('/invoices/{invoice}/send-reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.mail.reminder')->middleware('permission:invoices.view');
-    Route::post('/invoices/{invoice}/reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.send-reminder')->middleware('permission:invoices.view');
+    Route::get('/invoices/{invoice}/preview-email', [InvoiceMailController::class, 'preview'])->name('invoices.mail.preview')->middleware('permission:invoices.email');
+    Route::post('/invoices/{invoice}/send-email', [InvoiceMailController::class, 'send'])->name('invoices.mail.send')->middleware('permission:invoices.email');
+    Route::post('/invoices/{invoice}/payments/{payment}/send-receipt', [InvoiceMailController::class, 'sendReceipt'])->name('invoices.mail.receipt')->middleware('permission:invoices.email');
+    Route::post('/invoices/{invoice}/send-reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.mail.reminder')->middleware('permission:invoices.email');
+    Route::post('/invoices/{invoice}/reminder', [InvoiceMailController::class, 'sendReminder'])->name('invoices.send-reminder')->middleware('permission:invoices.email');
 
     // Customers & Khata
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:customers.view');
@@ -204,48 +204,48 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/logout-other-devices', [AuthController::class, 'logoutOtherDevices'])->name('settings.logout-other-devices');
 
         // Centralized Mailing System
-        Route::prefix('mail')->name('mail.')->group(function () {
+        Route::prefix('mail')->name('mail.')->middleware('permission:mail.view')->group(function () {
             Route::get('/', [MailDashboardController::class, 'index'])->name('dashboard');
-            Route::get('/compose', [MailComposeController::class, 'create'])->name('compose');
-            Route::post('/send', [MailComposeController::class, 'send'])->name('send');
-            Route::post('/preview', [MailComposeController::class, 'preview'])->name('preview');
+            Route::get('/compose', [MailComposeController::class, 'create'])->name('compose')->middleware('permission:mail.compose');
+            Route::post('/send', [MailComposeController::class, 'send'])->name('send')->middleware('permission:mail.compose');
+            Route::post('/preview', [MailComposeController::class, 'preview'])->name('preview')->middleware('permission:mail.compose');
 
             // Templates
-            Route::get('/templates', [MailTemplateController::class, 'index'])->name('templates.index');
-            Route::get('/templates/create', [MailTemplateController::class, 'create'])->name('templates.create');
-            Route::post('/templates', [MailTemplateController::class, 'store'])->name('templates.store');
-            Route::get('/templates/{template}/edit', [MailTemplateController::class, 'edit'])->name('templates.edit');
-            Route::put('/templates/{template}', [MailTemplateController::class, 'update'])->name('templates.update');
-            Route::post('/templates/{template}/duplicate', [MailTemplateController::class, 'duplicate'])->name('templates.duplicate');
-            Route::delete('/templates/{template}', [MailTemplateController::class, 'destroy'])->name('templates.destroy');
-            Route::get('/templates/{template}/preview', [MailTemplateController::class, 'preview'])->name('templates.preview');
+            Route::get('/templates', [MailTemplateController::class, 'index'])->name('templates.index')->middleware('permission:mail.templates');
+            Route::get('/templates/create', [MailTemplateController::class, 'create'])->name('templates.create')->middleware('permission:mail.templates');
+            Route::post('/templates', [MailTemplateController::class, 'store'])->name('templates.store')->middleware('permission:mail.templates');
+            Route::get('/templates/{template}/edit', [MailTemplateController::class, 'edit'])->name('templates.edit')->middleware('permission:mail.templates');
+            Route::put('/templates/{template}', [MailTemplateController::class, 'update'])->name('templates.update')->middleware('permission:mail.templates');
+            Route::post('/templates/{template}/duplicate', [MailTemplateController::class, 'duplicate'])->name('templates.duplicate')->middleware('permission:mail.templates');
+            Route::delete('/templates/{template}', [MailTemplateController::class, 'destroy'])->name('templates.destroy')->middleware('permission:mail.templates');
+            Route::get('/templates/{template}/preview', [MailTemplateController::class, 'preview'])->name('templates.preview')->middleware('permission:mail.templates');
 
             // Delivery Logs
             Route::get('/logs', [MailLogController::class, 'index'])->name('logs.index');
             Route::get('/logs/{log}', [MailLogController::class, 'show'])->name('logs.show');
-            Route::post('/logs/{log}/retry', [MailLogController::class, 'retry'])->name('logs.retry');
-            Route::delete('/logs/{log}', [MailLogController::class, 'destroy'])->name('logs.destroy');
+            Route::post('/logs/{log}/retry', [MailLogController::class, 'retry'])->name('logs.retry')->middleware('permission:mail.compose');
+            Route::delete('/logs/{log}', [MailLogController::class, 'destroy'])->name('logs.destroy')->middleware('permission:mail.settings');
 
             // Scheduled Emails
             Route::get('/scheduled', [MailScheduledController::class, 'index'])->name('scheduled.index');
-            Route::post('/scheduled/{log}/cancel', [MailScheduledController::class, 'cancel'])->name('scheduled.cancel');
-            Route::post('/scheduled/{log}/dispatch-now', [MailScheduledController::class, 'dispatchNow'])->name('scheduled.dispatch');
+            Route::post('/scheduled/{log}/cancel', [MailScheduledController::class, 'cancel'])->name('scheduled.cancel')->middleware('permission:mail.compose');
+            Route::post('/scheduled/{log}/dispatch-now', [MailScheduledController::class, 'dispatchNow'])->name('scheduled.dispatch')->middleware('permission:mail.compose');
 
             // SMTP & Provider Settings
-            Route::get('/settings', [MailSettingController::class, 'index'])->name('settings.index');
-            Route::post('/settings', [MailSettingController::class, 'store'])->name('settings.store');
-            Route::put('/settings/{setting}', [MailSettingController::class, 'update'])->name('settings.update');
-            Route::delete('/settings/{setting}', [MailSettingController::class, 'destroy'])->name('settings.destroy');
-            Route::post('/settings/test-connection', [MailSettingController::class, 'testConnection'])->name('settings.test-connection');
-            Route::post('/settings/send-test', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test');
-            Route::post('/settings/send-test-email', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test-email');
-            Route::post('/settings/{setting}/toggle', [MailSettingController::class, 'toggle'])->name('settings.toggle');
-            Route::post('/settings/{setting}/default', [MailSettingController::class, 'setDefault'])->name('settings.default');
-            Route::post('/settings/{setting}/set-default', [MailSettingController::class, 'setDefault'])->name('settings.set-default');
+            Route::get('/settings', [MailSettingController::class, 'index'])->name('settings.index')->middleware('permission:mail.settings');
+            Route::post('/settings', [MailSettingController::class, 'store'])->name('settings.store')->middleware('permission:mail.settings');
+            Route::put('/settings/{setting}', [MailSettingController::class, 'update'])->name('settings.update')->middleware('permission:mail.settings');
+            Route::delete('/settings/{setting}', [MailSettingController::class, 'destroy'])->name('settings.destroy')->middleware('permission:mail.settings');
+            Route::post('/settings/test-connection', [MailSettingController::class, 'testConnection'])->name('settings.test-connection')->middleware('permission:mail.settings');
+            Route::post('/settings/send-test', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test')->middleware('permission:mail.settings');
+            Route::post('/settings/send-test-email', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test-email')->middleware('permission:mail.settings');
+            Route::post('/settings/{setting}/toggle', [MailSettingController::class, 'toggle'])->name('settings.toggle')->middleware('permission:mail.settings');
+            Route::post('/settings/{setting}/default', [MailSettingController::class, 'setDefault'])->name('settings.default')->middleware('permission:mail.settings');
+            Route::post('/settings/{setting}/set-default', [MailSettingController::class, 'setDefault'])->name('settings.set-default')->middleware('permission:mail.settings');
 
             // Automations
-            Route::get('/automations', [MailAutomationController::class, 'index'])->name('automations.index');
-            Route::post('/automations', [MailAutomationController::class, 'update'])->name('automations.update');
+            Route::get('/automations', [MailAutomationController::class, 'index'])->name('automations.index')->middleware('permission:mail.automations');
+            Route::post('/automations', [MailAutomationController::class, 'update'])->name('automations.update')->middleware('permission:mail.automations');
         });
     });
 

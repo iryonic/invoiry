@@ -122,7 +122,7 @@ class User extends Authenticatable
         if ($this->role === 'cashier') {
             $allowedCashierActions = [
                 'dashboard.view', 'dashboard',
-                'invoices.view', 'invoices.create', 'invoices.print', 'invoices.record_payments',
+                'invoices.view', 'invoices.create', 'invoices.print', 'invoices.record_payments', 'invoices.email',
                 'items.view', 'customers.view', 'customers.create',
             ];
             $module = explode('.', $permission)[0];
@@ -167,6 +167,11 @@ class User extends Authenticatable
     public function canAccessSettings(): bool
     {
         return ($this->isSuperAdmin() || $this->role === 'tenant_admin') && $this->hasPermission('settings.view');
+    }
+
+    public function canAccessMail(): bool
+    {
+        return ($this->isSuperAdmin() || $this->role === 'tenant_admin') && $this->hasPermission('mail.view');
     }
 
     public function canInwardStock(): bool
