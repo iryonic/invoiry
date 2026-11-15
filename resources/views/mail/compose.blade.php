@@ -5,7 +5,7 @@
 @section('page-subtitle', 'Send transactional invoices, receipts, payment notices, or general business communication')
 
 @section('content')
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-6 mx-auto">
 
     <!-- Navigation Tabs -->
     @include('mail.partials.nav-tabs')
@@ -102,7 +102,7 @@
                         </div>
                         <textarea name="body_html" id="emailBodyHtml" rows="12" required
                             class="w-full px-3.5 py-3 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-mono focus:outline-none focus:ring-1 focus:ring-black leading-relaxed"
-                            placeholder="<p>Dear {{customer_name}},</p><p>Thank you for choosing {{business_name}}.</p>">{{ old('body_html') }}</textarea>
+                            placeholder="<p>Dear @{{customer_name}},</p><p>Thank you for choosing @{{business_name}}.</p>">{{ old('body_html') }}</textarea>
                     </div>
 
                     <!-- Plain Text Alternative Toggle -->
@@ -290,7 +290,7 @@
     }
 
     function insertPlaceholder(placeholderKey) {
-        const tag = `{{${placeholderKey}}}`;
+        const tag = '{' + '{' + placeholderKey + '}' + '}';
         const textarea = document.getElementById('emailBodyHtml');
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;

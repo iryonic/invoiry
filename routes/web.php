@@ -238,7 +238,9 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/settings/{setting}', [MailSettingController::class, 'destroy'])->name('settings.destroy');
             Route::post('/settings/test-connection', [MailSettingController::class, 'testConnection'])->name('settings.test-connection');
             Route::post('/settings/send-test', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test');
+            Route::post('/settings/send-test-email', [MailSettingController::class, 'sendTestEmail'])->name('settings.send-test-email');
             Route::post('/settings/{setting}/toggle', [MailSettingController::class, 'toggle'])->name('settings.toggle');
+            Route::post('/settings/{setting}/default', [MailSettingController::class, 'setDefault'])->name('settings.default');
             Route::post('/settings/{setting}/set-default', [MailSettingController::class, 'setDefault'])->name('settings.set-default');
 
             // Automations

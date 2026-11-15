@@ -42,6 +42,43 @@ class MailSystemTest extends TestCase
         $response->assertOk();
         $response->assertSee('Total Sent');
         $response->assertSee('SMTP Config');
+
+        $composeResponse = $this->get(route('mail.compose'));
+        $composeResponse->assertOk();
+        $composeResponse->assertSee('Compose Email');
+
+        $composeResponse = $this->get(route('mail.compose'));
+        $composeResponse->assertOk();
+        $composeResponse->assertSee('Compose Email');
+
+        $settingsResponse = $this->get(route('mail.settings.index'));
+        $settingsResponse->assertOk();
+        $settingsResponse->assertSee('Mail Server');
+        $settingsResponse->assertSee('SMTP Configuration');
+
+        $templatesResponse = $this->get(route('mail.templates.index'));
+        $templatesResponse->assertOk();
+
+        $logsResponse = $this->get(route('mail.logs.index'));
+        $logsResponse->assertOk();
+
+        $scheduledResponse = $this->get(route('mail.scheduled.index'));
+        $scheduledResponse->assertOk();
+
+        $automationsResponse = $this->get(route('mail.automations.index'));
+        $automationsResponse->assertOk();
+
+        $templatesResponse = $this->get(route('mail.templates.index'));
+        $templatesResponse->assertOk();
+
+        $logsResponse = $this->get(route('mail.logs.index'));
+        $logsResponse->assertOk();
+
+        $scheduledResponse = $this->get(route('mail.scheduled.index'));
+        $scheduledResponse->assertOk();
+
+        $automationsResponse = $this->get(route('mail.automations.index'));
+        $automationsResponse->assertOk();
     }
 
     public function test_smtp_setting_creation_encrypts_password_and_masks_display(): void

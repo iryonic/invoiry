@@ -5,7 +5,7 @@
 @section('page-subtitle', 'Monitor transactional delivery, SMTP server health, background queues, and sent communications')
 
 @section('content')
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-6  mx-auto">
 
     <!-- Top Action & Navigation Tabs -->
     @include('mail.partials.nav-tabs')

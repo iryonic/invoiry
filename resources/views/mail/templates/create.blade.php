@@ -3,7 +3,7 @@
 @section('title', 'Create Email Template — Invoiry')
 
 @section('content')
-<div class="space-y-6 max-w-5xl mx-auto">
+<div class="space-y-6  mx-auto">
     {{-- Header Banner --}}
     <div class="card-surface p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -193,6 +193,7 @@
     </div>
 </div>
 
+@verbatim
 <script>
 // Auto-slugify name into code
 document.getElementById('templateName').addEventListener('input', function(e) {
@@ -313,5 +314,6 @@ function closePreviewModal() {
     document.getElementById('previewModal').classList.add('hidden');
 }
 </script>
+@endverbatim
 @endsection
 
