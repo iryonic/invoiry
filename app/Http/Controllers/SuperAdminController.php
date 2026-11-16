@@ -142,6 +142,8 @@ class SuperAdminController extends Controller
             'password.min' => 'The admin password must be at least 6 characters long.',
         ]);
 
+        $validated['email'] = strtolower(trim($validated['email']));
+
         $permissions = $request->has('permissions')
             ? RbacPermissionManager::normalizeFromRequest($request->input('permissions', []))
             : RbacPermissionManager::getDefaultPermissions($validated['business_type']);
@@ -150,9 +152,13 @@ class SuperAdminController extends Controller
             ? DynamicFormConfig::normalizeFromRequest($request->input('form_fields', []))
             : DynamicFormConfig::getDefaultConfig();
 
-        $slug = Str::slug($validated['name']);
-        if (Tenant::where('slug', $slug)->exists()) {
-            $slug .= '-'.Str::random(4);
+        $baseSlug = Str::slug($validated['name']);
+        if (empty($baseSlug)) {
+            $baseSlug = 'store-'.Str::lower(Str::random(6));
+        }
+        $slug = $baseSlug;
+        while (Tenant::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.Str::lower(Str::random(4));
         }
 
         $defaultTrialDays = (int) SystemSetting::get('default_trial_days', 30);
@@ -192,13 +198,31 @@ class SuperAdminController extends Controller
                 return [$tenant, $admin];
             });
 
-            AuditLog::record('tenant.created', "Created new store \"{$tenant->name}\" with customized RBAC & form permissions", $tenant->id);
+            try {
+                AuditLog::record('tenant.created', "Created new store \"{$tenant->name}\" with customized RBAC & form permissions", $tenant->id);
+            } catch (\Throwable $auditEx) {
+                Log::warning('Failed to record tenant.created audit log: '.$auditEx->getMessage());
+            }
 
             return redirect()->route('superadmin.tenants.index')->with('success', "Business \"{$tenant->name}\" registered successfully with admin \"{$admin->email}\"!");
         } catch (\Throwable $e) {
-            Log::error('SuperAdmin storeTenant failed: '.$e->getMessage());
+            Log::error('SuperAdmin storeTenant failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'input' => $request->except(['password']),
+            ]);
 
-            return back()->withInput()->with('error', 'Unable to provision new business store. Please check input data and try again.');
+            $message = $e->getMessage();
+            if (str_contains($message, 'UNIQUE constraint failed: users.email') || str_contains($message, 'users_email_unique')) {
+                $friendlyError = "The email address '{$validated['email']}' is already assigned to an existing user account. Please use a unique email address.";
+            } elseif (str_contains($message, 'UNIQUE constraint failed: tenants.slug') || str_contains($message, 'tenants_slug_unique')) {
+                $friendlyError = 'A store with a similar name / web URL already exists. Please adjust the store name slightly.';
+            } elseif (str_contains($message, 'UNIQUE constraint failed: tenants.email')) {
+                $friendlyError = "The store email '{$validated['email']}' is already registered to another store.";
+            } else {
+                $friendlyError = 'Unable to provision new business store: '.$message;
+            }
+
+            return back()->withInput()->with('error', $friendlyError);
         }
     }
 
