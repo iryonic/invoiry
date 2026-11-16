@@ -4,6 +4,19 @@
 @endphp
 
 <div class="space-y-4">
+    <!-- Business Type Filter Notice Bar -->
+    <div id="form_business_type_banner" class="p-3.5 rounded-xl bg-[#EFF8FF] border border-[#B2DDFF] text-xs text-[#175CD3] flex items-center justify-between shadow-2xs">
+        <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-[#175CD3] text-white flex items-center justify-center text-xs font-black shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <span>Transaction forms customized for: <strong id="form_btype_name" class="font-bold underline decoration-[#175CD3]/40 decoration-2">Mobile Selling &amp; Reselling</strong></span>
+                <p class="text-[11px] text-[#4B70B6] mt-0.5">Showing form field configurations tailored to this business model.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Header & Subtitle -->
     <div class="card-surface p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl">
         <div>
@@ -28,9 +41,19 @@
     <!-- Forms Tabs Navigation -->
     <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-[#E6E6E6]">
         @foreach($forms as $formKey => $formMeta)
+            @php
+                $formTypes = 'selling,repair,both';
+                if ($formKey === 'item') {
+                    $formTypes = 'selling,both';
+                } elseif (in_array($formKey, ['spare_part', 'repair_job'])) {
+                    $formTypes = 'repair,both';
+                }
+            @endphp
             <button type="button"
                     onclick="switchFormTab('{{ $formKey }}')"
                     id="tab_btn_{{ $formKey }}"
+                    data-form-key="{{ $formKey }}"
+                    data-business-types="{{ $formTypes }}"
                     class="form-tab-btn px-3.5 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex-shrink-0 {{ $loop->first ? 'bg-[#111111] text-[#B7FF00]' : 'bg-white text-[#666666] hover:text-[#111111] border border-[#E6E6E6]' }}">
                 {{ $formMeta['name'] }}
             </button>
@@ -117,6 +140,8 @@
 </div>
 
 <script>
+    let activeFormBusinessType = '{{ $businessType ?? "all" }}';
+
     function switchFormTab(formKey) {
         document.querySelectorAll('.form-section-pane').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.form-tab-btn').forEach(btn => {
@@ -132,6 +157,50 @@
             activeBtn.classList.add('bg-[#111111]', 'text-[#B7FF00]');
         }
     }
+
+    function filterFormTabsByBusinessType(bType) {
+        if (!bType) return;
+        activeFormBusinessType = bType;
+
+        const banner = document.getElementById('form_business_type_banner');
+        const btypeName = document.getElementById('form_btype_name');
+        const labels = {
+            'selling': 'Mobile Selling & Reselling',
+            'repair': 'Mobile Repair Workshop',
+            'both': 'Both Selling & Repair'
+        };
+
+        if (banner && btypeName) {
+            banner.classList.remove('hidden');
+            btypeName.textContent = labels[bType] || bType;
+        }
+
+        let firstVisibleTab = null;
+        let currentTabStillVisible = false;
+
+        document.querySelectorAll('.form-tab-btn').forEach(btn => {
+            const types = (btn.getAttribute('data-business-types') || 'selling,repair,both').split(',');
+            const isVisible = (bType === 'all' || types.includes(bType));
+            btn.style.display = isVisible ? '' : 'none';
+
+            if (isVisible) {
+                if (!firstVisibleTab) firstVisibleTab = btn.getAttribute('data-form-key');
+                if (btn.classList.contains('bg-[#111111]')) {
+                    currentTabStillVisible = true;
+                }
+            }
+        });
+
+        if (!currentTabStillVisible && firstVisibleTab) {
+            switchFormTab(firstVisibleTab);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (activeFormBusinessType !== 'all') {
+            filterFormTabsByBusinessType(activeFormBusinessType);
+        }
+    });
 
     function filterFormFields(query) {
         const q = (query || '').toLowerCase().trim();

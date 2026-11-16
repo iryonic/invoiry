@@ -263,6 +263,12 @@
                 </div>
 
                 <script>
+                    window.addEventListener('scroll', function() {
+                        if (window.scrollY !== 0 || window.scrollX !== 0) {
+                            window.scrollTo(0, 0);
+                        }
+                    }, { passive: true });
+
                     setTimeout(() => {
                         document.querySelectorAll('.auto-dismiss-alert').forEach(el => {
                             el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';

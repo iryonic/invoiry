@@ -15,6 +15,22 @@
 @endphp
 
 <div class="space-y-4">
+    <!-- Business Type Filter Notice Bar -->
+    <div id="perm_business_type_banner" class="p-3.5 rounded-xl bg-[#EFF8FF] border border-[#B2DDFF] text-xs text-[#175CD3] flex items-center justify-between shadow-2xs">
+        <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-[#175CD3] text-white flex items-center justify-center text-xs font-black shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <span>Permissions tailored for: <strong id="perm_btype_name" class="font-bold underline decoration-[#175CD3]/40 decoration-2">Mobile Selling &amp; Reselling</strong></span>
+                <p class="text-[11px] text-[#4B70B6] mt-0.5">Showing modules and capabilities relevant to this business model.</p>
+            </div>
+        </div>
+        <span class="text-[10px] font-mono px-2.5 py-1 rounded-md bg-white text-[#175CD3] font-bold border border-[#B2DDFF] shrink-0" id="perm_btype_count">
+            Loading Modules...
+        </span>
+    </div>
+
     <!-- Controls Toolbar: Status, Enable All, Disable All & Category Filter -->
     <div class="card-surface p-4 sm:p-5 shadow-2xs space-y-3.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -86,6 +102,7 @@
             @php
                 $isNew = $mod['is_new'] ?? ($modKey === 'mail');
                 $category = $mod['category'] ?? 'core';
+                $modTypes = implode(',', $mod['business_types'] ?? ['selling', 'repair', 'both']);
                 $modActionsCount = count($mod['actions']);
                 $modEnabledCount = 0;
                 foreach ($mod['actions'] as $actKey => $actLabel) {
@@ -96,7 +113,8 @@
             @endphp
             <div class="card-surface p-4 sm:p-5 shadow-2xs space-y-3.5 border {{ $isNew ? 'border-[#B7FF00] bg-white ring-1 ring-[#B7FF00]/40' : 'border-[#E6E6E6] bg-white' }} rounded-xl transition hover:shadow-xs" 
                  id="mod_card_{{ $modKey }}"
-                 data-category="{{ $category }}">
+                 data-category="{{ $category }}"
+                 data-business-types="{{ $modTypes }}">
                 
                 <!-- Module Header -->
                 <div class="flex items-start justify-between border-b border-[#E6E6E6] pb-3 gap-2">
@@ -170,15 +188,37 @@
 </div>
 
 <script>
+    let activeBusinessType = '{{ $businessType ?? "all" }}';
+    let currentCategory = 'all';
+
     function updateCounters() {
-        const allCheckboxes = document.querySelectorAll('input[name^="permissions["]');
-        let enabled = 0;
-        allCheckboxes.forEach(cb => {
-            if (cb.checked) enabled++;
+        let activeVisible = 0;
+        let totalVisible = 0;
+        let visibleModules = 0;
+
+        document.querySelectorAll('[id^="mod_card_"]').forEach(card => {
+            const cardTypes = (card.getAttribute('data-business-types') || 'selling,repair,both').split(',');
+            const isApplicable = (activeBusinessType === 'all' || cardTypes.includes(activeBusinessType));
+            if (!isApplicable) return;
+
+            visibleModules++;
+            const checkboxes = card.querySelectorAll('input[name^="permissions["]');
+            totalVisible += checkboxes.length;
+            checkboxes.forEach(cb => {
+                if (cb.checked) activeVisible++;
+            });
         });
 
-        const countEl = document.getElementById('perm_enabled_count');
-        if (countEl) countEl.textContent = enabled;
+        const enabledEl = document.getElementById('perm_enabled_count');
+        if (enabledEl) enabledEl.textContent = activeVisible;
+        const summaryBadge = document.getElementById('perm_summary_badge');
+        if (summaryBadge) {
+            summaryBadge.innerHTML = `<span id="perm_enabled_count">${activeVisible}</span> / ${totalVisible} CAPABILITIES ACTIVE`;
+        }
+        const btypeCount = document.getElementById('perm_btype_count');
+        if (btypeCount) {
+            btypeCount.textContent = `${visibleModules} Modules Applicable`;
+        }
 
         // Update module individual counters
         @foreach($modules as $modKey => $mod)
@@ -194,17 +234,69 @@
         @endforeach
     }
 
+    function filterPermissionsByBusinessType(bType) {
+        if (!bType) return;
+        activeBusinessType = bType;
+
+        const banner = document.getElementById('perm_business_type_banner');
+        const btypeName = document.getElementById('perm_btype_name');
+        const labels = {
+            'selling': 'Mobile Selling & Reselling',
+            'repair': 'Mobile Repair Workshop',
+            'both': 'Both Selling & Repair'
+        };
+
+        if (banner && btypeName) {
+            banner.classList.remove('hidden');
+            btypeName.textContent = labels[bType] || bType;
+        }
+
+        // Show/hide category chips
+        const catInventory = document.getElementById('cat_btn_inventory');
+        const catRepair = document.getElementById('cat_btn_repair');
+        if (catInventory) {
+            catInventory.style.display = (bType === 'repair') ? 'none' : '';
+        }
+        if (catRepair) {
+            catRepair.style.display = (bType === 'selling') ? 'none' : '';
+        }
+
+        // Reset category to 'all' if the selected category is now hidden
+        if (currentCategory === 'inventory' && bType === 'repair') {
+            filterByCategory('all');
+        } else if (currentCategory === 'repair' && bType === 'selling') {
+            filterByCategory('all');
+        } else {
+            const query = (document.getElementById('filter_permissions_input')?.value || '').toLowerCase().trim();
+            applyFilters(query, currentCategory);
+        }
+
+        updateCounters();
+    }
+
     // Attach listener to all checkboxes
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[name^="permissions["]').forEach(cb => {
             cb.addEventListener('change', updateCounters);
         });
-        updateCounters();
+        if (activeBusinessType !== 'all') {
+            filterPermissionsByBusinessType(activeBusinessType);
+        } else {
+            updateCounters();
+        }
     });
 
     function setAllPermissions(enable) {
         document.querySelectorAll('input[name^="permissions["]').forEach(cb => {
-            cb.checked = enable;
+            const card = cb.closest('[id^="mod_card_"]');
+            if (card) {
+                const cardTypes = (card.getAttribute('data-business-types') || 'selling,repair,both').split(',');
+                if (activeBusinessType === 'all' || cardTypes.includes(activeBusinessType)) {
+                    cb.checked = enable;
+                }
+            } else {
+                cb.checked = enable;
+            }
         });
         updateCounters();
     }
@@ -218,8 +310,6 @@
         });
         updateCounters();
     }
-
-    let currentCategory = 'all';
 
     function filterByCategory(category) {
         currentCategory = category;
@@ -248,8 +338,15 @@
         
         cards.forEach(card => {
             const cardCat = card.getAttribute('data-category');
+            const cardTypes = (card.getAttribute('data-business-types') || 'selling,repair,both').split(',');
+            const matchesType = (activeBusinessType === 'all' || cardTypes.includes(activeBusinessType));
+
+            if (!matchesType) {
+                card.style.display = 'none';
+                return;
+            }
+
             const matchesCat = (category === 'all' || cardCat === category);
-            
             if (!matchesCat) {
                 card.style.display = 'none';
                 return;

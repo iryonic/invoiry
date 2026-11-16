@@ -128,6 +128,18 @@ class SuperAdminController extends Controller
             'state' => ['nullable', 'string', 'max:100'],
             'gstin' => ['nullable', 'string', 'max:30'],
             'upi_id' => ['nullable', 'string', 'max:100'],
+        ], [
+            'name.required' => 'Please enter the Business / Store Name.',
+            'email.required' => 'Please enter the Store Official Email address.',
+            'email.email' => 'Please provide a valid email address (e.g. store@domain.com).',
+            'email.unique' => 'This email address is already registered to another store or admin user.',
+            'phone.required' => 'Please enter the Store Phone Number.',
+            'business_type.required' => 'Please choose a Business Type (Selling, Repair, or Both).',
+            'business_type.in' => 'Invalid business type chosen.',
+            'plan.required' => 'Please choose a subscription plan.',
+            'admin_name.required' => 'Please enter the Store Administrator Full Name.',
+            'password.required' => 'Please enter an admin login password.',
+            'password.min' => 'The admin password must be at least 6 characters long.',
         ]);
 
         $permissions = $request->has('permissions')

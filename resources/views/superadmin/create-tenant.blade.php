@@ -55,15 +55,64 @@
     </div>
 
     @if($errors->any())
-        <div class="p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-xl text-xs text-[#B91C1C] space-y-1">
-            <div class="font-bold">Please correct the following errors before proceeding:</div>
-            <ul class="list-disc list-inside">
+        <div class="p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-xl text-xs text-[#B91C1C] space-y-1.5 shadow-xs">
+            <div class="font-bold flex items-center gap-2 text-sm text-[#991B1B]">
+                <svg class="w-4 h-4 text-[#DC2626] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>Please correct the following fields before proceeding:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-0.5 text-[11px] font-medium text-[#B91C1C] pl-1">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const errorFields = {
+                    'name': { input: 'input_store_name', err: 'err_msg_store_name' },
+                    'email': { input: 'input_email', err: 'err_msg_email' },
+                    'phone': { input: 'input_phone', err: 'err_msg_phone' },
+                    'admin_name': { input: 'input_admin_name', err: 'err_msg_admin_name' },
+                    'password': { input: 'input_password', err: 'err_msg_password' }
+                };
+
+                @foreach($errors->keys() as $key)
+                    if (errorFields['{{ $key }}']) {
+                        const target = errorFields['{{ $key }}'];
+                        const inputEl = document.getElementById(target.input);
+                        const errEl = document.getElementById(target.err);
+                        if (inputEl) {
+                            inputEl.classList.add('input-validation-error', 'border-[#DC2626]', 'ring-2', 'ring-[#DC2626]/20', 'bg-[#FEF2F2]');
+                        }
+                        if (errEl) {
+                            errEl.textContent = '{{ $errors->first($key) }}';
+                            errEl.classList.remove('hidden');
+                        }
+                    }
+                @endforeach
+
+                // Auto-focus first error field
+                const firstInvalid = document.querySelector('.input-validation-error');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
+            });
+        </script>
     @endif
+
+    <!-- Real-time Guided Validation Alert Box -->
+    <div id="stepValidationAlert" class="hidden p-4 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#B91C1C] flex items-start gap-3 shadow-xs transition duration-200">
+        <div class="w-6 h-6 rounded-lg bg-[#DC2626] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="font-bold text-sm text-[#991B1B]" id="stepValidationErrorTitle">Action Required</div>
+            <p class="mt-0.5 leading-relaxed text-[#B91C1C]" id="stepValidationErrorMessage">Please provide the missing information highlighted below.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('stepValidationAlert').classList.add('hidden')" class="text-[#B91C1C] hover:text-black font-bold p-1 text-base">&times;</button>
+    </div>
 
     <!-- Main Multi-Step Form -->
     <form id="onboardForm" method="POST" action="{{ route('superadmin.tenants.store') }}" class="space-y-4">
@@ -85,7 +134,8 @@
                         <label class="block text-xs font-bold text-[#344054] mb-1">Business / Store Name *</label>
                         <input type="text" id="input_store_name" name="name" value="{{ old('name') }}" required
                             placeholder="e.g. Apex Electronics, Metro Mobile Hub"
-                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-bold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-bold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition">
+                        <p class="text-[11px] text-[#DC2626] font-semibold mt-1 hidden" id="err_msg_store_name"></p>
                     </div>
 
                     <div>
@@ -114,7 +164,7 @@
                                         </div>
                                         <span class="text-xs font-black text-[#111111]">Mobile Selling &amp; Reselling</span>
                                     </div>
-                                    <input type="radio" name="business_type" value="selling" {{ old('business_type', 'selling') === 'selling' ? 'checked' : '' }} required class="mt-0.5 text-[#111111] focus:ring-black">
+                                    <input type="radio" name="business_type" value="selling" {{ old('business_type', 'selling') === 'selling' ? 'checked' : '' }} onchange="handleBusinessTypeChange(this.value)" required class="mt-0.5 text-[#111111] focus:ring-black">
                                 </div>
                                 <p class="text-[11px] text-[#666666] mt-2 leading-relaxed">
                                     Focuses on complete mobile phones with brand, model, storage, color, and dual IMEI 1/2 tracking.
@@ -133,7 +183,7 @@
                                         </div>
                                         <span class="text-xs font-black text-[#111111]">Mobile Repair</span>
                                     </div>
-                                    <input type="radio" name="business_type" value="repair" {{ old('business_type') === 'repair' ? 'checked' : '' }} required class="mt-0.5 text-[#111111] focus:ring-black">
+                                    <input type="radio" name="business_type" value="repair" {{ old('business_type') === 'repair' ? 'checked' : '' }} onchange="handleBusinessTypeChange(this.value)" required class="mt-0.5 text-[#111111] focus:ring-black">
                                 </div>
                                 <p class="text-[11px] text-[#666666] mt-2 leading-relaxed">
                                     For repair workshops managing spare parts (screens, batteries, ICs), customer service jobs, and technicians.
@@ -152,7 +202,7 @@
                                         </div>
                                         <span class="text-xs font-black text-[#111111]">Both Selling &amp; Repair</span>
                                     </div>
-                                    <input type="radio" name="business_type" value="both" {{ old('business_type') === 'both' ? 'checked' : '' }} required class="mt-0.5 text-[#111111] focus:ring-black">
+                                    <input type="radio" name="business_type" value="both" {{ old('business_type') === 'both' ? 'checked' : '' }} onchange="handleBusinessTypeChange(this.value)" required class="mt-0.5 text-[#111111] focus:ring-black">
                                 </div>
                                 <p class="text-[11px] text-[#666666] mt-2 leading-relaxed">
                                     Full dual capabilities: separate device catalogue &amp; spare parts inventory, with unified billing and customer Khata.
@@ -168,14 +218,16 @@
                         <label class="block text-xs font-bold text-[#344054] mb-1">Store Official Email *</label>
                         <input type="email" id="input_email" name="email" value="{{ old('email') }}" required
                             placeholder="store@domain.com"
-                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition">
+                        <p class="text-[11px] text-[#DC2626] font-semibold mt-1 hidden" id="err_msg_email"></p>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-[#344054] mb-1">Store Phone *</label>
                         <input type="text" id="input_phone" name="phone" value="{{ old('phone') }}" required
                             placeholder="10 Digits"
-                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition">
+                        <p class="text-[11px] text-[#DC2626] font-semibold mt-1 hidden" id="err_msg_phone"></p>
                     </div>
 
                     <div>
@@ -221,16 +273,18 @@
                         <label class="block text-xs font-bold text-[#344054] mb-1">Admin Full Name *</label>
                         <input type="text" id="input_admin_name" name="admin_name" value="{{ old('admin_name') }}" required
                             placeholder="e.g. Malik Haris"
-                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                            class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition">
+                        <p class="text-[11px] text-[#DC2626] font-semibold mt-1 hidden" id="err_msg_admin_name"></p>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-[#344054] mb-1">Admin Password *</label>
                         <div class="relative">
                             <input type="password" id="input_password" name="password" required placeholder="Minimum 6 characters"
-                                class="w-full pl-3.5 pr-10 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                                class="w-full pl-3.5 pr-10 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] transition">
                             <x-password-toggle-btn target="input_password" />
                         </div>
+                        <p class="text-[11px] text-[#DC2626] font-semibold mt-1 hidden" id="err_msg_password"></p>
                     </div>
                 </div>
             </div>
@@ -322,9 +376,9 @@
                 <button type="button" onclick="goToStep(3)" class="btn-secondary min-h-[44px]">
                     Back to Form Fields
                 </button>
-                <button type="submit" class="btn-lime min-h-[44px] px-8 text-sm font-bold shadow-xs">
+                <button type="submit" id="btnSubmitOnboard" class="btn-lime min-h-[44px] px-8 text-sm font-bold shadow-xs flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                    <span>Create Tenant & Launch Business</span>
+                    <span>Create Tenant &amp; Launch Business</span>
                 </button>
             </div>
         </div>
@@ -332,21 +386,163 @@
 </div>
 
 <script>
-    function goToStep(step) {
-        // Simple front validation for Step 1 before advancing
-        if (step > 1) {
-            const name = document.getElementById('input_store_name').value.trim();
-            const email = document.getElementById('input_email').value.trim();
-            const phone = document.getElementById('input_phone').value.trim();
-            const adminName = document.getElementById('input_admin_name').value.trim();
-            const pass = document.getElementById('input_password').value;
+    let currentStep = 1;
 
-            if (!name || !email || !phone || !adminName || !pass) {
-                alert('Please fill out all required fields marked with * on Step 1 (Store details & Admin credentials) first.');
-                goToStep(1);
-                return;
-            }
+    function clearAllErrors() {
+        document.querySelectorAll('.input-validation-error').forEach(el => {
+            el.classList.remove('input-validation-error', 'border-[#DC2626]', 'ring-2', 'ring-[#DC2626]/20', 'bg-[#FEF2F2]');
+        });
+        document.querySelectorAll('[id^="err_msg_"]').forEach(el => {
+            el.classList.add('hidden');
+            el.textContent = '';
+        });
+        const alertBox = document.getElementById('stepValidationAlert');
+        if (alertBox) alertBox.classList.add('hidden');
+    }
+
+    function showFieldError(inputId, errSpanId, message, fieldLabel) {
+        const input = document.getElementById(inputId);
+        const errSpan = document.getElementById(errSpanId);
+        const alertBox = document.getElementById('stepValidationAlert');
+        const titleEl = document.getElementById('stepValidationErrorTitle');
+        const msgEl = document.getElementById('stepValidationErrorMessage');
+
+        if (alertBox && msgEl) {
+            if (titleEl) titleEl.textContent = fieldLabel ? `Missing / Invalid: ${fieldLabel}` : 'Required Field Missing';
+            msgEl.textContent = message;
+            alertBox.classList.remove('hidden');
         }
+
+        if (errSpan) {
+            errSpan.textContent = message;
+            errSpan.classList.remove('hidden');
+        }
+
+        if (input) {
+            input.classList.add('input-validation-error', 'border-[#DC2626]', 'ring-2', 'ring-[#DC2626]/20', 'bg-[#FEF2F2]');
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            input.focus();
+
+            const clearHandler = function() {
+                input.classList.remove('input-validation-error', 'border-[#DC2626]', 'ring-2', 'ring-[#DC2626]/20', 'bg-[#FEF2F2]');
+                if (errSpan) errSpan.classList.add('hidden');
+                if (alertBox) alertBox.classList.add('hidden');
+                input.removeEventListener('input', clearHandler);
+                input.removeEventListener('change', clearHandler);
+            };
+            input.addEventListener('input', clearHandler);
+            input.addEventListener('change', clearHandler);
+        }
+    }
+
+    function validateStep1() {
+        clearAllErrors();
+
+        // 1. Store Name
+        const nameInput = document.getElementById('input_store_name');
+        if (!nameInput || !nameInput.value.trim()) {
+            showFieldError('input_store_name', 'err_msg_store_name', 'Please enter the Business or Store Name to identify this store.', 'Store Name');
+            return false;
+        }
+
+        // 2. Business Type
+        const bTypeChecked = document.querySelector('input[name="business_type"]:checked');
+        if (!bTypeChecked) {
+            const alertBox = document.getElementById('stepValidationAlert');
+            const msgEl = document.getElementById('stepValidationErrorMessage');
+            if (alertBox && msgEl) {
+                msgEl.textContent = 'Please choose a Business Type (Mobile Selling, Mobile Repair, or Both Selling & Repair).';
+                alertBox.classList.remove('hidden');
+            }
+            return false;
+        }
+
+        // 3. Official Email
+        const emailInput = document.getElementById('input_email');
+        const emailVal = emailInput ? emailInput.value.trim() : '';
+        if (!emailVal) {
+            showFieldError('input_email', 'err_msg_email', 'Please enter the Store Official Email address.', 'Store Official Email');
+            return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailVal)) {
+            showFieldError('input_email', 'err_msg_email', 'Please enter a valid email format (e.g. store@domain.com).', 'Store Official Email');
+            return false;
+        }
+
+        // 4. Store Phone
+        const phoneInput = document.getElementById('input_phone');
+        const phoneVal = phoneInput ? phoneInput.value.trim().replace(/[^0-9]/g, '') : '';
+        if (!phoneVal) {
+            showFieldError('input_phone', 'err_msg_phone', 'Please enter the Store Phone Number for counter contact & receipts.', 'Store Phone');
+            return false;
+        }
+        if (phoneVal.length < 10) {
+            showFieldError('input_phone', 'err_msg_phone', 'Phone number must contain at least 10 numeric digits.', 'Store Phone');
+            return false;
+        }
+
+        // 5. Admin Full Name
+        const adminNameInput = document.getElementById('input_admin_name');
+        if (!adminNameInput || !adminNameInput.value.trim()) {
+            showFieldError('input_admin_name', 'err_msg_admin_name', 'Please enter the Administrator Full Name for initial login.', 'Admin Full Name');
+            return false;
+        }
+
+        // 6. Admin Password
+        const passInput = document.getElementById('input_password');
+        if (!passInput || !passInput.value) {
+            showFieldError('input_password', 'err_msg_password', 'Please set an initial login password for the store administrator.', 'Admin Password');
+            return false;
+        }
+        if (passInput.value.length < 6) {
+            showFieldError('input_password', 'err_msg_password', 'Password must be at least 6 characters in length.', 'Admin Password');
+            return false;
+        }
+
+        return true;
+    }
+
+    function handleBusinessTypeChange(bType) {
+        if (!bType) return;
+
+        // Dynamically filter permissions in Step 2
+        if (typeof filterPermissionsByBusinessType === 'function') {
+            filterPermissionsByBusinessType(bType);
+        }
+
+        // Dynamically filter form field customization tabs in Step 3
+        if (typeof filterFormTabsByBusinessType === 'function') {
+            filterFormTabsByBusinessType(bType);
+        }
+
+        // Preset default permissions appropriate for the chosen business type
+        if (bType === 'selling') {
+            document.querySelectorAll('input[name^="permissions[items]"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('input[name^="permissions[repairs]"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name^="permissions[spare_parts]"]').forEach(cb => cb.checked = false);
+        } else if (bType === 'repair') {
+            document.querySelectorAll('input[name^="permissions[items]"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name^="permissions[repairs]"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('input[name^="permissions[spare_parts]"]').forEach(cb => cb.checked = true);
+        } else if (bType === 'both') {
+            document.querySelectorAll('input[name^="permissions[items]"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('input[name^="permissions[repairs]"]').forEach(cb => cb.checked = true);
+            document.querySelectorAll('input[name^="permissions[spare_parts]"]').forEach(cb => cb.checked = true);
+        }
+
+        if (typeof updateCounters === 'function') {
+            updateCounters();
+        }
+    }
+
+    function goToStep(step) {
+        // Enforce Step 1 validation when moving forward
+        if (step > 1 && !validateStep1()) {
+            step = 1;
+        }
+
+        currentStep = step;
 
         // Hide all panes
         document.querySelectorAll('.step-pane').forEach(el => el.classList.add('hidden'));
@@ -387,8 +583,14 @@
         const activePane = document.getElementById('step_section_' + step);
         if (activePane) activePane.classList.remove('hidden');
 
-        // Populate step 4 review
-        if (step === 4) {
+        // Dynamic synchronization upon opening Step 2 or 3
+        const selectedBType = document.querySelector('input[name="business_type"]:checked')?.value || 'selling';
+        if (step === 2 && typeof filterPermissionsByBusinessType === 'function') {
+            filterPermissionsByBusinessType(selectedBType);
+        } else if (step === 3 && typeof filterFormTabsByBusinessType === 'function') {
+            filterFormTabsByBusinessType(selectedBType);
+        } else if (step === 4) {
+            // Populate step 4 review
             document.getElementById('rev_store_name').textContent = document.getElementById('input_store_name').value || 'Store Name';
             document.getElementById('rev_email').textContent = document.getElementById('input_email').value || 'email@store.com';
             document.getElementById('rev_phone').textContent = document.getElementById('input_phone').value || '10 Digits';
@@ -396,7 +598,6 @@
             document.getElementById('rev_admin_name').textContent = document.getElementById('input_admin_name').value || 'Malik Haris';
             document.getElementById('rev_admin_email').textContent = document.getElementById('input_email').value || 'email@store.com';
 
-            const bType = document.querySelector('input[name="business_type"]:checked')?.value;
             const bTypeLabels = {
                 'selling': 'Mobile Selling & Reselling',
                 'repair': 'Mobile Repair',
@@ -404,11 +605,41 @@
             };
             const revBType = document.getElementById('rev_business_type');
             if (revBType) {
-                revBType.textContent = bTypeLabels[bType] || 'Mobile Selling & Reselling';
+                revBType.textContent = bTypeLabels[selectedBType] || 'Mobile Selling & Reselling';
             }
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    // Attach form submit handler with comprehensive pre-flight validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('onboardForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!validateStep1()) {
+                    e.preventDefault();
+                    goToStep(1);
+                    return false;
+                }
+
+                const btn = document.getElementById('btnSubmitOnboard');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `
+                        <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span>Creating Business &amp; Launching...</span>
+                    `;
+                }
+            });
+        }
+
+        // Initialize business type filters based on checked option
+        const initialBType = document.querySelector('input[name="business_type"]:checked')?.value || 'selling';
+        handleBusinessTypeChange(initialBType);
+    });
 </script>
 @endsection

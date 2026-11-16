@@ -145,12 +145,12 @@
 
         <!-- Section 1: Granular Permissions -->
         <div id="gov_section_perms" class="gov-section-pane space-y-4">
-            @include('superadmin.partials.permissions-form', ['permissions' => $permissions])
+            @include('superadmin.partials.permissions-form', ['permissions' => $permissions, 'businessType' => $tenant->business_type])
         </div>
 
         <!-- Section 2: Dynamic Form Fields -->
         <div id="gov_section_forms" class="gov-section-pane hidden space-y-4">
-            @include('superadmin.partials.form-fields-config', ['formConfig' => $formConfig])
+            @include('superadmin.partials.form-fields-config', ['formConfig' => $formConfig, 'businessType' => $tenant->business_type])
         </div>
 
         <!-- Sticky Floating Save Bar -->

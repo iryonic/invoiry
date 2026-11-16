@@ -470,19 +470,23 @@
                     <!-- Tax Mode -->
                     <div id="gstModeWrapper" class="space-y-1.5">
                         <label class="block text-xs font-semibold text-[#111111]">Tax Calculation Mode</label>
+                        @php
+                            $isTaxInclusiveVal = old('is_tax_inclusive', ($tenant->is_tax_inclusive ?? true) ? '1' : '0') === '1' ? '1' : '0';
+                        @endphp
+                        <input type="hidden" name="is_tax_inclusive" id="is_tax_inclusive" value="{{ $isTaxInclusiveVal }}">
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="is_tax_inclusive" value="1" {{ old('is_tax_inclusive', ($tenant->is_tax_inclusive ?? true) ? '1' : '0') === '1' ? 'checked' : '' }} onchange="calculateTotals()" class="peer sr-only">
-                                <div class="px-3 py-2 rounded-lg border border-[#E6E6E6] text-center text-xs font-semibold text-[#666666] peer-checked:bg-[#050505] peer-checked:text-[#B7FF00] peer-checked:border-black peer-checked:font-bold transition">
-                                    Tax Inclusive (MRP)
-                                </div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="is_tax_inclusive" value="0" {{ old('is_tax_inclusive', ($tenant->is_tax_inclusive ?? true) ? '1' : '0') === '0' ? 'checked' : '' }} onchange="calculateTotals()" class="peer sr-only">
-                                <div class="px-3 py-2 rounded-lg border border-[#E6E6E6] text-center text-xs font-semibold text-[#666666] peer-checked:bg-[#050505] peer-checked:text-[#B7FF00] peer-checked:border-black peer-checked:font-bold transition">
-                                    Tax Exclusive (+GST)
-                                </div>
-                            </label>
+                            <button type="button"
+                                id="btnTaxInclusive"
+                                onclick="setTaxMode(1)"
+                                class="{{ $isTaxInclusiveVal === '1' ? 'border-black bg-[#050505] text-[#B7FF00] font-bold shadow-xs' : 'border-[#E6E6E6] bg-white text-[#666666] hover:text-[#111111] font-semibold' }} w-full px-3 py-2 rounded-lg border text-center text-xs transition">
+                                Tax Inclusive (MRP)
+                            </button>
+                            <button type="button"
+                                id="btnTaxExclusive"
+                                onclick="setTaxMode(0)"
+                                class="{{ $isTaxInclusiveVal === '0' ? 'border-black bg-[#050505] text-[#B7FF00] font-bold shadow-xs' : 'border-[#E6E6E6] bg-white text-[#666666] hover:text-[#111111] font-semibold' }} w-full px-3 py-2 rounded-lg border text-center text-xs transition">
+                                Tax Exclusive (+GST)
+                            </button>
                         </div>
                     </div>
 
@@ -611,6 +615,25 @@
             input.value = rate;
             calculateTotals();
         }
+    }
+
+    function setTaxMode(mode) {
+        const hidden = document.getElementById('is_tax_inclusive');
+        if (hidden) {
+            hidden.value = mode === 1 ? '1' : '0';
+        }
+        const btnIncl = document.getElementById('btnTaxInclusive');
+        const btnExcl = document.getElementById('btnTaxExclusive');
+        if (btnIncl && btnExcl) {
+            if (mode === 1) {
+                btnIncl.className = 'w-full px-3 py-2 rounded-lg border border-black bg-[#050505] text-[#B7FF00] font-bold shadow-xs text-center text-xs transition';
+                btnExcl.className = 'w-full px-3 py-2 rounded-lg border border-[#E6E6E6] bg-white text-[#666666] hover:text-[#111111] font-semibold text-center text-xs transition';
+            } else {
+                btnExcl.className = 'w-full px-3 py-2 rounded-lg border border-black bg-[#050505] text-[#B7FF00] font-bold shadow-xs text-center text-xs transition';
+                btnIncl.className = 'w-full px-3 py-2 rounded-lg border border-[#E6E6E6] bg-white text-[#666666] hover:text-[#111111] font-semibold text-center text-xs transition';
+            }
+        }
+        calculateTotals();
     }
 
     function toggleGstControls() {
@@ -1021,8 +1044,8 @@
         const taxRateInput = document.getElementById('tax_rate');
         const taxRate = isGst ? (parseFloat(taxRateInput ? taxRateInput.value : 0) || 0) : 0;
 
-        const modeRadio = document.querySelector('input[name="is_tax_inclusive"]:checked') || document.querySelector('input[name="is_tax_inclusive"][type="hidden"]');
-        const isTaxInclusive = modeRadio ? modeRadio.value === '1' : false;
+        const modeInput = document.getElementById('is_tax_inclusive') || document.querySelector('input[name="is_tax_inclusive"]:checked');
+        const isTaxInclusive = modeInput ? modeInput.value === '1' : true;
 
         const discountInput = document.getElementById('discount');
         const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
