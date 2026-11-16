@@ -25,7 +25,7 @@
 
     <!-- Search & Filter Toolbar -->
     <div class="card-surface p-3.5 shadow-2xs">
-        <form method="GET" action="{{ route('superadmin.tenants.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+        <form method="GET" action="{{ route('superadmin.tenants.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
             <div class="sm:col-span-2 relative">
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="Search by store name, phone, email, GSTIN, or city..."
@@ -34,8 +34,17 @@
             </div>
 
             <div>
+                <select name="business_type" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-semibold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[42px]">
+                    <option value="all">All Business Types</option>
+                    <option value="selling" {{ request('business_type') === 'selling' ? 'selected' : '' }}>Selling &amp; Reselling</option>
+                    <option value="repair" {{ request('business_type') === 'repair' ? 'selected' : '' }}>Mobile Repair</option>
+                    <option value="both" {{ request('business_type') === 'both' ? 'selected' : '' }}>Both Selling &amp; Repair</option>
+                </select>
+            </div>
+
+            <div>
                 <select name="plan" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-semibold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[42px]">
-                    <option value="all">All Subscription Plans</option>
+                    <option value="all">All Plans</option>
                     <option value="trial" {{ request('plan') === 'trial' ? 'selected' : '' }}>Trial (14-30 Days)</option>
                     <option value="starter" {{ request('plan') === 'starter' ? 'selected' : '' }}>Starter Plan</option>
                     <option value="pro" {{ request('plan') === 'pro' ? 'selected' : '' }}>Pro Business</option>
@@ -55,7 +64,7 @@
                 <button type="submit" class="w-full py-2 bg-[#111111] hover:bg-black text-white rounded-xl text-xs sm:text-sm font-bold min-h-[42px] transition">
                     Filter Stores
                 </button>
-                @if(request()->hasAny(['search', 'plan', 'status']))
+                @if(request()->hasAny(['search', 'plan', 'status', 'business_type']))
                     <a href="{{ route('superadmin.tenants.index') }}" class="btn-secondary min-h-[42px] text-xs">Reset</a>
                 @endif
             </div>
@@ -91,9 +100,26 @@
                                 <input type="checkbox" data-bulk-item value="{{ $t->id }}" class="rounded border-[#D0D5DD] text-black focus:ring-black">
                             </td>
                             <td class="py-3.5 px-4">
-                                <a href="{{ route('superadmin.tenants.show', $t) }}" class="font-bold text-[#111111] hover:underline text-sm block">
-                                    {{ $t->name }}
-                                </a>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <a href="{{ route('superadmin.tenants.show', $t) }}" class="font-bold text-[#111111] hover:underline text-sm block">
+                                        {{ $t->name }}
+                                    </a>
+                                    @php
+                                        $typeBadge = match($t->business_type ?? 'selling') {
+                                            'repair' => 'bg-[#FEF0C7] text-[#B54708] border-[#FEDF89]',
+                                            'both' => 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+                                            default => 'bg-[#EFF8FF] text-[#175CD3] border-[#B2DDFF]',
+                                        };
+                                        $typeShort = match($t->business_type ?? 'selling') {
+                                            'repair' => 'Repair',
+                                            'both' => 'Sell + Repair',
+                                            default => 'Selling',
+                                        };
+                                    @endphp
+                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold border {{ $typeBadge }}">
+                                        {{ $typeShort }}
+                                    </span>
+                                </div>
                                 <div class="text-[11px] text-[#929292] font-mono">{{ $t->slug }} &bull; Prefix: {{ $t->invoice_prefix }}</div>
                             </td>
                             <td class="py-3.5 px-4">

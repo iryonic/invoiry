@@ -15,7 +15,9 @@ use App\Http\Controllers\MailSettingController;
 use App\Http\Controllers\MailTemplateController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RepairJobController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SparePartController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SuperAdmin\BrochureController;
@@ -137,23 +139,59 @@ Route::middleware(['auth'])->group(function () {
     // Tenant App Routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('permission:dashboard.view');
 
-    // Inward Inventory / Brought Items
-    Route::get('/items', [ItemController::class, 'index'])->name('items.index')->middleware('permission:items.view');
-    Route::post('/items/bulk', [ItemController::class, 'bulkAction'])->name('items.bulk')->middleware('permission:items.view');
-    Route::get('/items/create', [ItemController::class, 'create'])->name('items.create')->middleware('permission:items.create');
-    Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('permission:items.create');
-    Route::post('/items/quick-store', [ItemController::class, 'quickStore'])->name('items.quick-store')->middleware('permission:items.create');
-    Route::get('/items/search-api', [ItemController::class, 'searchApi'])->name('items.search-api')->middleware('permission:items.view');
-    Route::get('/api/items/search', [ItemController::class, 'searchApi'])->name('api.items.search')->middleware('permission:items.view');
-    Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show')->middleware('permission:items.view');
-    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit')->middleware('permission:items.edit');
-    Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update')->middleware('permission:items.edit');
-    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('permission:items.delete');
+    // Inward Inventory / Brought Items (Mobile Selling & Both)
+    Route::middleware(['business_type:selling,both'])->group(function () {
+        Route::get('/items', [ItemController::class, 'index'])->name('items.index')->middleware('permission:items.view');
+        Route::post('/items/bulk', [ItemController::class, 'bulkAction'])->name('items.bulk')->middleware('permission:items.view');
+        Route::get('/items/create', [ItemController::class, 'create'])->name('items.create')->middleware('permission:items.create');
+        Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('permission:items.create');
+        Route::post('/items/quick-store', [ItemController::class, 'quickStore'])->name('items.quick-store')->middleware('permission:items.create');
+        Route::get('/items/search-api', [ItemController::class, 'searchApi'])->name('items.search-api')->middleware('permission:items.view');
+        Route::get('/api/items/search', [ItemController::class, 'searchApi'])->name('api.items.search')->middleware('permission:items.view');
+        Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show')->middleware('permission:items.view');
+        Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit')->middleware('permission:items.edit');
+        Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update')->middleware('permission:items.edit');
+        Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('permission:items.delete');
 
-    // Dedicated Device Stock Management Ledger
-    Route::get('/stock', [StockController::class, 'index'])->name('stock.index')->middleware('permission:items.view');
-    Route::post('/stock/{item}/adjust', [StockController::class, 'adjust'])->name('stock.adjust')->middleware('permission:items.edit');
-    Route::get('/stock/{item}/history', [StockController::class, 'history'])->name('stock.history')->middleware('permission:items.view');
+        // Dedicated Device Stock Management Ledger
+        Route::get('/stock', [StockController::class, 'index'])->name('stock.index')->middleware('permission:items.view');
+        Route::post('/stock/{item}/adjust', [StockController::class, 'adjust'])->name('stock.adjust')->middleware('permission:items.edit');
+        Route::get('/stock/{item}/history', [StockController::class, 'history'])->name('stock.history')->middleware('permission:items.view');
+    });
+
+    // Spare Parts & Repair Workshop Routes (Mobile Repair & Both)
+    Route::middleware(['business_type:repair,both'])->group(function () {
+        // Spare Parts Catalogue & Stock
+        Route::get('/spare-parts', [SparePartController::class, 'index'])->name('spare-parts.index')->middleware('permission:spare_parts.view');
+        Route::get('/spare-parts/create', [SparePartController::class, 'create'])->name('spare-parts.create')->middleware('permission:spare_parts.create');
+        Route::post('/spare-parts', [SparePartController::class, 'store'])->name('spare-parts.store')->middleware('permission:spare_parts.create');
+        Route::get('/spare-parts/stock', [SparePartController::class, 'stockIndex'])->name('spare-parts.stock')->middleware('permission:spare_parts.view');
+        Route::get('/spare-parts/search-api', [SparePartController::class, 'searchApi'])->name('spare-parts.search-api')->middleware('permission:spare_parts.view');
+        Route::get('/api/spare-parts/search', [SparePartController::class, 'searchApi'])->name('api.spare-parts.search')->middleware('permission:spare_parts.view');
+        Route::get('/spare-parts/{sparePart}', [SparePartController::class, 'show'])->name('spare-parts.show')->middleware('permission:spare_parts.view');
+        Route::get('/spare-parts/{sparePart}/edit', [SparePartController::class, 'edit'])->name('spare-parts.edit')->middleware('permission:spare_parts.edit');
+        Route::put('/spare-parts/{sparePart}', [SparePartController::class, 'update'])->name('spare-parts.update')->middleware('permission:spare_parts.edit');
+        Route::delete('/spare-parts/{sparePart}', [SparePartController::class, 'destroy'])->name('spare-parts.destroy')->middleware('permission:spare_parts.delete');
+        Route::post('/spare-parts/{sparePart}/adjust', [SparePartController::class, 'adjustStock'])->name('spare-parts.adjust')->middleware('permission:spare_parts.adjust_stock');
+
+        // Repair Service Orders & Workshop
+        Route::get('/repairs', [RepairJobController::class, 'index'])->name('repairs.index')->middleware('permission:repairs.view');
+        Route::get('/repairs/create', [RepairJobController::class, 'create'])->name('repairs.create')->middleware('permission:repairs.create');
+        Route::post('/repairs', [RepairJobController::class, 'store'])->name('repairs.store')->middleware('permission:repairs.create');
+        Route::get('/repairs/{repairJob}', [RepairJobController::class, 'show'])->name('repairs.show')->middleware('permission:repairs.view');
+        Route::get('/repairs/{repairJob}/edit', [RepairJobController::class, 'edit'])->name('repairs.edit')->middleware('permission:repairs.edit');
+        Route::put('/repairs/{repairJob}', [RepairJobController::class, 'update'])->name('repairs.update')->middleware('permission:repairs.edit');
+        Route::delete('/repairs/{repairJob}', [RepairJobController::class, 'destroy'])->name('repairs.destroy')->middleware('permission:repairs.delete');
+        Route::post('/repairs/{repairJob}/status', [RepairJobController::class, 'updateStatus'])->name('repairs.status')->middleware('permission:repairs.status_update');
+        Route::post('/repairs/{repairJob}/assign-technician', [RepairJobController::class, 'assignTechnician'])->name('repairs.assign-technician')->middleware('permission:repairs.assign_technician');
+        Route::post('/repairs/{repairJob}/parts', [RepairJobController::class, 'addPart'])->name('repairs.parts.add')->middleware('permission:repairs.billing');
+        Route::delete('/repairs/{repairJob}/parts/{item}', [RepairJobController::class, 'removePart'])->name('repairs.parts.remove')->middleware('permission:repairs.billing');
+        Route::post('/repairs/{repairJob}/charges', [RepairJobController::class, 'updateCharges'])->name('repairs.charges')->middleware('permission:repairs.billing');
+        Route::post('/repairs/{repairJob}/payments', [RepairJobController::class, 'recordPayment'])->name('repairs.payments')->middleware('permission:repairs.payments');
+        Route::post('/repairs/{repairJob}/generate-invoice', [RepairJobController::class, 'generateInvoice'])->name('repairs.generate-invoice')->middleware('permission:repairs.billing');
+        Route::get('/repairs/{repairJob}/job-sheet', [RepairJobController::class, 'printJobSheet'])->name('repairs.job-sheet')->middleware('permission:repairs.print');
+        Route::get('/repairs/{repairJob}/delivery-receipt', [RepairJobController::class, 'printDeliveryReceipt'])->name('repairs.delivery-receipt')->middleware('permission:repairs.print');
+    });
 
     // Invoices / Sell Items
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index')->middleware('permission:invoices.view');

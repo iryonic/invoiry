@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->nullOnDelete();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->decimal('amount', 10, 2)->default(0.00);
             $table->string('payment_method')->default('cash');

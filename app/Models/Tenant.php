@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BusinessTypeManager;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -45,6 +46,9 @@ class Tenant extends Model
         'terms_conditions',
         'declaration',
         'plan',
+        'business_type',
+        'repair_job_prefix',
+        'repair_job_counter',
         'expires_at',
         'is_active',
         'permissions',
@@ -64,6 +68,7 @@ class Tenant extends Model
             'default_gst_rate' => 'decimal:2',
             'expires_at' => 'date',
             'invoice_counter' => 'integer',
+            'repair_job_counter' => 'integer',
             'permissions' => 'array',
             'form_fields' => 'array',
         ];
@@ -173,6 +178,51 @@ class Tenant extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function spareParts(): HasMany
+    {
+        return $this->hasMany(SparePart::class);
+    }
+
+    public function repairJobs(): HasMany
+    {
+        return $this->hasMany(RepairJob::class);
+    }
+
+    public function sparePartStockMovements(): HasMany
+    {
+        return $this->hasMany(SparePartStockMovement::class);
+    }
+
+    public function supportsSelling(): bool
+    {
+        return BusinessTypeManager::supportsSelling($this);
+    }
+
+    public function supportsRepair(): bool
+    {
+        return BusinessTypeManager::supportsRepair($this);
+    }
+
+    public function isSellingOnly(): bool
+    {
+        return ($this->business_type ?? BusinessTypeManager::TYPE_SELLING) === BusinessTypeManager::TYPE_SELLING;
+    }
+
+    public function isRepairOnly(): bool
+    {
+        return ($this->business_type ?? BusinessTypeManager::TYPE_SELLING) === BusinessTypeManager::TYPE_REPAIR;
+    }
+
+    public function isBoth(): bool
+    {
+        return BusinessTypeManager::isBoth($this);
+    }
+
+    public function getBusinessTypeNameAttribute(): string
+    {
+        return BusinessTypeManager::getLabel($this->business_type);
+    }
+
     /**
      * Generate the next formatted invoice number and increment counter.
      */
@@ -181,6 +231,18 @@ class Tenant extends Model
         $prefix = $this->invoice_prefix ?: 'INV-';
         $number = str_pad((string) $this->invoice_counter, 5, '0', STR_PAD_LEFT);
         $this->increment('invoice_counter');
+
+        return "{$prefix}{$number}";
+    }
+
+    /**
+     * Generate the next formatted repair job number and increment counter.
+     */
+    public function generateNextRepairJobNumber(): string
+    {
+        $prefix = $this->repair_job_prefix ?: 'REP-';
+        $number = str_pad((string) ($this->repair_job_counter ?: 1), 5, '0', STR_PAD_LEFT);
+        $this->increment('repair_job_counter');
 
         return "{$prefix}{$number}";
     }

@@ -33,7 +33,7 @@
     </div>
 
     <!-- Role Explanation Banner -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 {{ $tenant?->supportsRepair() ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }} gap-3">
         <div class="card-surface p-4 shadow-2xs flex items-start gap-3">
             <div class="w-8 h-8 rounded-lg bg-[#050505] text-[#B7FF00] flex items-center justify-center font-bold text-xs shrink-0">
                 SA
@@ -53,6 +53,18 @@
                 <p class="text-[11px] text-[#666666] mt-0.5">Counter billing only: Generate customer invoices, view available device inventory, record customer settlements. Restricted from shop settings & cost prices.</p>
             </div>
         </div>
+
+        @if($tenant?->supportsRepair())
+            <div class="card-surface p-4 shadow-2xs flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center font-bold text-xs shrink-0 border border-[#BAE6FD]">
+                    TC
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-[#111111]">Technician (Workbench Engineer)</h4>
+                    <p class="text-[11px] text-[#666666] mt-0.5">Workshop management: Perform diagnosis, update repair statuses, install spare parts, log repair notes, and generate job sheets.</p>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Staff Members List -->
@@ -89,6 +101,10 @@
                                 @if($u->role === 'tenant_admin')
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#111111] text-[#B7FF00]">
                                         <span>Store Admin</span>
+                                    </span>
+                                @elseif($u->role === 'technician')
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]">
+                                        <span>Technician</span>
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F2F4F7] text-[#344054] border border-[#EAECF0]">
@@ -233,6 +249,9 @@
                     <label class="block text-xs font-bold text-[#344054] mb-1">Role & Permissions *</label>
                     <select name="role" required class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-bold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
                         <option value="cashier" selected>Store Cashier (Counter Billing & Invoices only)</option>
+                        @if($tenant?->supportsRepair())
+                            <option value="technician">Technician (Workbench & Repairs)</option>
+                        @endif
                         <option value="tenant_admin">Store Admin (Full Manager Access)</option>
                     </select>
                 </div>

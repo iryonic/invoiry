@@ -1,5 +1,8 @@
 @php
     $user = auth()->user();
+    $tenant = \App\Services\TenantContext::get() ?? $user?->tenant;
+    $supportsSelling = $tenant ? $tenant->supportsSelling() : true;
+    $supportsRepair = $tenant ? $tenant->supportsRepair() : false;
     $isSuperAdmin = $user?->isSuperAdmin() && !session()->has('active_tenant_id');
 @endphp
 
@@ -97,10 +100,12 @@
         </div>
     @endif
 
-    <!-- BILLING & SALES -->
-    @if($user?->hasPermission('invoices.create') || $user?->hasPermission('invoices.view'))
+    <!-- BILLING & SALES (SELLING / BOTH) -->
+    @if($supportsSelling && ($user?->hasPermission('invoices.create') || $user?->hasPermission('invoices.view')))
         <div class="space-y-1 pt-1">
-            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Billing & Sales</div>
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">
+                {{ $supportsRepair ? 'Device Sales' : 'Billing & Sales' }}
+            </div>
             
             @if($user?->hasPermission('invoices.create'))
                 <a href="{{ route('invoices.create') }}" 
@@ -120,10 +125,12 @@
         </div>
     @endif
 
-    <!-- INVENTORY -->
-    @if($user?->hasPermission('items.view') || $user?->hasPermission('items.create'))
+    <!-- DEVICE INVENTORY (SELLING / BOTH) -->
+    @if($supportsSelling && ($user?->hasPermission('items.view') || $user?->hasPermission('items.create')))
         <div class="space-y-1 pt-1">
-            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">Inventory</div>
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">
+                {{ $supportsRepair ? 'Device Inventory' : 'Inventory' }}
+            </div>
             
             @if($user?->hasPermission('items.view'))
                 <a href="{{ route('items.index') }}" 
@@ -146,6 +153,78 @@
                     <span>Inward Purchase</span>
                 </a>
             @endif
+        </div>
+    @endif
+
+    <!-- WORKSHOP & REPAIRS (REPAIR / BOTH) -->
+    @if($supportsRepair && ($user?->hasPermission('repairs.view') || $user?->hasPermission('repairs.create')))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider flex items-center justify-between">
+                <span>Workshop &amp; Repair</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-[#111111] text-[#0369A1] font-mono font-bold border border-[#1e293b]">BENCH</span>
+            </div>
+
+            @if($user?->hasPermission('repairs.create'))
+                <a href="{{ route('repairs.create') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('repairs.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>New Repair Request</span>
+                </a>
+            @endif
+
+            @if($user?->hasPermission('repairs.view'))
+                <a href="{{ route('repairs.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('repairs.index') || request()->routeIs('repairs.show') || request()->routeIs('repairs.edit') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>Repair Jobs</span>
+                </a>
+            @endif
+        </div>
+    @endif
+
+    <!-- SPARE PARTS & HARDWARE (REPAIR / BOTH) -->
+    @if($supportsRepair && ($user?->hasPermission('spare_parts.view') || $user?->hasPermission('spare_parts.create')))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">
+                Spare Parts &amp; Stock
+            </div>
+
+            @if($user?->hasPermission('spare_parts.view'))
+                <a href="{{ route('spare-parts.index') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('spare-parts.index') || request()->routeIs('spare-parts.show') || request()->routeIs('spare-parts.edit') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Parts Catalogue</span>
+                </a>
+
+                <a href="{{ route('spare-parts.stock') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('spare-parts.stock') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    <span>Parts Stock Management</span>
+                </a>
+            @endif
+
+            @if($user?->hasPermission('spare_parts.create'))
+                <a href="{{ route('spare-parts.create') }}" 
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('spare-parts.create') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Spare Part</span>
+                </a>
+            @endif
+        </div>
+    @endif
+
+    <!-- REPAIR INVOICES (FOR REPAIR-ONLY BUSINESSES) -->
+    @if(!$supportsSelling && $supportsRepair && $user?->hasPermission('invoices.view'))
+        <div class="space-y-1 pt-1">
+            <div class="px-2.5 pb-1 text-[10px] font-bold text-[#929292] uppercase tracking-wider">
+                Billing &amp; Invoices
+            </div>
+
+            <a href="{{ route('invoices.index') }}" 
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition whitespace-nowrap {{ request()->routeIs('invoices.index*') ? 'bg-[#B7FF00] text-[#101010] font-bold' : 'text-[#E7E7E7] hover:bg-[#1a1a1a] font-medium' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span>Repair Invoices</span>
+            </a>
         </div>
     @endif
 

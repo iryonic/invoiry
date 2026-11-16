@@ -52,6 +52,10 @@
                 <button type="button" onclick="filterByCategory('inventory')" id="cat_btn_inventory" class="perm-cat-btn px-2.5 py-1 rounded-md text-[11px] font-bold transition bg-white text-[#666666] border border-[#E6E6E6] hover:text-[#111111]">
                     Inventory & Stock
                 </button>
+                <button type="button" onclick="filterByCategory('repair')" id="cat_btn_repair" class="perm-cat-btn px-2.5 py-1 rounded-md text-[11px] font-bold transition bg-white text-[#666666] border border-[#E6E6E6] hover:text-[#111111] flex items-center gap-1">
+                    <span>Repair &amp; Service</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>
+                </button>
                 <button type="button" onclick="filterByCategory('ledger')" id="cat_btn_ledger" class="perm-cat-btn px-2.5 py-1 rounded-md text-[11px] font-bold transition bg-white text-[#666666] border border-[#E6E6E6] hover:text-[#111111]">
                     Khata
                 </button>

@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $tenant = $tenant ?? \App\Services\TenantContext::get();
+@endphp
+
 @section('title', 'Sales Ledger • Invoices')
 @section('page-title', 'Invoices')
 @section('page-subtitle', 'Chronological sales registry, payment statuses, and invoice documents')
@@ -42,13 +46,23 @@
 
     <!-- Filter & Search Toolbar -->
     <div class="card-surface p-4 shadow-2xs">
-        <form method="GET" action="{{ route('invoices.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <form method="GET" action="{{ route('invoices.index') }}" class="grid grid-cols-1 sm:grid-cols-2 {{ $tenant?->supportsRepair() ? 'lg:grid-cols-6' : 'lg:grid-cols-5' }} gap-3">
             <div class="sm:col-span-2 relative">
                 <input type="text" name="search" value="{{ request('search') }}"
                     placeholder="Search by Invoice #, Customer, Phone, or IMEI..."
                     class="w-full pl-9 pr-4 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-1 focus:ring-black min-h-[40px]">
                 <svg class="w-4 h-4 text-[#929292] absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
+
+            @if($tenant?->supportsRepair())
+                <div>
+                    <select name="type" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black min-h-[40px]">
+                        <option value="all">All Types</option>
+                        <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Device Sales</option>
+                        <option value="repair" {{ request('type') === 'repair' ? 'selected' : '' }}>Repair Services</option>
+                    </select>
+                </div>
+            @endif
 
             <div>
                 <select name="status" class="w-full px-3 py-2 bg-[#F7F7F6] border border-[#E6E6E6] rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-black min-h-[40px]">
@@ -120,6 +134,9 @@
                                     <a href="{{ route('invoices.show', $inv) }}" class="font-mono text-xs font-bold text-[#111111] hover:underline">
                                         {{ $inv->invoice_number }}
                                     </a>
+                                    @if($inv->isRepair())
+                                        <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]">Repair</span>
+                                    @endif
                                     @if($inv->isDraft())
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF0C7] text-[#B54708] border border-[#FEDF89]">Draft</span>
                                     @elseif($inv->isCancelled())
@@ -139,9 +156,18 @@
                                 </h4>
 
                                 <div class="text-xs text-[#666666] mt-1">
-                                    @foreach($inv->items as $it)
-                                        <div>{{ $it->item_name }} ({{ $it->storage }}) &bull; <span class="font-mono text-[11px] text-[#929292]">IMEI: {{ $it->imei_1 ?: 'N/A' }}</span></div>
-                                    @endforeach
+                                    @if($inv->isRepair())
+                                        <div class="text-[#0369A1] font-semibold">
+                                            Repair Job: #{{ $inv->repairJob?->job_number ?? 'REP' }}
+                                            @if($inv->repairJob)
+                                                <span class="text-[#555555] font-normal">({{ $inv->repairJob->device_brand }} {{ $inv->repairJob->device_model }})</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        @foreach($inv->items as $it)
+                                            <div>{{ $it->item_name }} ({{ $it->storage }}) &bull; <span class="font-mono text-[11px] text-[#929292]">IMEI: {{ $it->imei_1 ?: 'N/A' }}</span></div>
+                                        @endforeach
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -218,22 +244,36 @@
                                     <input type="checkbox" data-bulk-item value="{{ $inv->id }}" class="rounded border-[#D0D5DD] text-black focus:ring-black">
                                 </td>
                                 <td class="py-3 px-4 font-mono font-bold">
-                                    <a href="{{ route('invoices.show', $inv) }}" class="hover:underline text-[#111111]">
-                                        {{ $inv->invoice_number }}
-                                    </a>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <a href="{{ route('invoices.show', $inv) }}" class="hover:underline text-[#111111]">
+                                            {{ $inv->invoice_number }}
+                                        </a>
+                                        @if($inv->isRepair())
+                                            <span class="inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]">Repair</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="py-3 px-4">
                                     <div class="font-semibold text-[#111111]">{{ $inv->customer->name }}</div>
                                     <div class="text-[11px] text-[#929292] font-mono">{{ $inv->customer->phone }}</div>
                                 </td>
                                 <td class="py-3 px-4">
-                                    @foreach($inv->items as $it)
-                                        <div class="text-[#333333]">
-                                            {{ $it->item_name }}
-                                            @if($it->storage)<span class="text-[#666666]">({{ $it->storage }})</span>@endif
-                                            @if($it->imei_1)<span class="font-mono text-[11px] text-[#929292]">&bull; {{ $it->imei_1 }}</span>@endif
+                                    @if($inv->isRepair())
+                                        <div class="text-[#0369A1] font-semibold">
+                                            Repair Job: #{{ $inv->repairJob?->job_number ?? 'REP' }}
+                                            @if($inv->repairJob)
+                                                <div class="text-[11px] text-[#666666] font-normal">{{ $inv->repairJob->device_brand }} {{ $inv->repairJob->device_model }}</div>
+                                            @endif
                                         </div>
-                                    @endforeach
+                                    @else
+                                        @foreach($inv->items as $it)
+                                            <div class="text-[#333333]">
+                                                {{ $it->item_name }}
+                                                @if($it->storage)<span class="text-[#666666]">({{ $it->storage }})</span>@endif
+                                                @if($it->imei_1)<span class="font-mono text-[11px] text-[#929292]">&bull; {{ $it->imei_1 }}</span>@endif
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </td>
                                 <td class="py-3 px-4 text-right font-bold text-[#111111]">
                                     ₹{{ number_format($inv->grand_total, 2) }}

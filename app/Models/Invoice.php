@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\InvoiceFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,8 +22,10 @@ class Invoice extends Model
     protected $fillable = [
         'tenant_id',
         'customer_id',
+        'repair_job_id',
         'user_id',
         'invoice_number',
+        'invoice_type',
         'invoice_date',
         'due_date',
         'subtotal',
@@ -133,6 +136,26 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function repairJob(): BelongsTo
+    {
+        return $this->belongsTo(RepairJob::class);
+    }
+
+    public function scopeSales(Builder $query): Builder
+    {
+        return $query->where('invoice_type', 'sale');
+    }
+
+    public function scopeRepairs(Builder $query): Builder
+    {
+        return $query->where('invoice_type', 'repair');
+    }
+
+    public function isRepair(): bool
+    {
+        return $this->invoice_type === 'repair';
     }
 
     public function getAmountDueAttribute(): float

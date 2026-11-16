@@ -48,6 +48,11 @@ class Customer extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function repairJobs(): HasMany
+    {
+        return $this->hasMany(RepairJob::class)->latest();
+    }
+
     public function totalSpent(): float
     {
         if (isset($this->invoices_sum_grand_total)) {

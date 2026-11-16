@@ -380,6 +380,193 @@ class DynamicFormConfig
                     ],
                 ],
             ],
+            'spare_part' => [
+                'name' => 'Add Spare Part Form',
+                'description' => 'Inputs available when adding repair spare parts and hardware components',
+                'fields' => [
+                    'name' => [
+                        'label' => 'Spare Part Name',
+                        'system' => true,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'e.g. iPhone 13 Pro OLED Screen Panel, Samsung S22 Charging Sub-board',
+                    ],
+                    'category' => [
+                        'label' => 'Part Category',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Screen/Display, Battery, Camera, Charging Port, etc.',
+                    ],
+                    'brand' => [
+                        'label' => 'Brand / Manufacturer',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Apple, Samsung, OEM, Generic',
+                    ],
+                    'compatible_models' => [
+                        'label' => 'Compatible Models',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'e.g. iPhone 13, iPhone 14',
+                    ],
+                    'sku' => [
+                        'label' => 'SKU / Part Code',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Unique internal catalogue code',
+                    ],
+                    'barcode' => [
+                        'label' => 'Barcode / EAN',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Scannable barcode string',
+                    ],
+                    'specifications' => [
+                        'label' => 'Specifications & Notes',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Quality grading, warranty, IC details',
+                    ],
+                    'purchase_price' => [
+                        'label' => 'Purchase Cost (₹)',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Inward procurement cost',
+                    ],
+                    'selling_price' => [
+                        'label' => 'Selling Price / Price in Repair (₹)',
+                        'system' => true,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Base retail / repair billing price',
+                    ],
+                    'stock_quantity' => [
+                        'label' => 'Initial Stock Quantity',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Number of units added',
+                    ],
+                    'min_stock_level' => [
+                        'label' => 'Minimum Stock Alert Threshold',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Alerts when stock falls to this level',
+                    ],
+                    'supplier' => [
+                        'label' => 'Supplier / Vendor',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Wholesale vendor origin',
+                    ],
+                ],
+            ],
+            'repair_job' => [
+                'name' => 'Repair Job Form',
+                'description' => 'Inputs available when registering customer device repair requests',
+                'fields' => [
+                    'device_brand' => [
+                        'label' => 'Device Brand',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Apple, Samsung, Xiaomi, Vivo, etc.',
+                    ],
+                    'device_model' => [
+                        'label' => 'Device Model',
+                        'system' => true,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Core device identifier, e.g. iPhone 14 Pro',
+                    ],
+                    'imei' => [
+                        'label' => 'Device IMEI Number',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Optional TAC hardware identifier',
+                    ],
+                    'serial_number' => [
+                        'label' => 'Serial Number',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Manufacturer serial code',
+                    ],
+                    'device_color' => [
+                        'label' => 'Device Colour',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Cosmetic color variant',
+                    ],
+                    'device_password' => [
+                        'label' => 'Screen Lock / Passcode',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'PIN or pattern for testing functionality',
+                    ],
+                    'device_condition' => [
+                        'label' => 'Physical Condition at Intake',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Scratches, cracked screen, missing buttons, power state',
+                    ],
+                    'accessories_received' => [
+                        'label' => 'Accessories Received',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'SIM tray, charger, memory card, case',
+                    ],
+                    'reported_problem' => [
+                        'label' => 'Reported Issue / Problem',
+                        'system' => true,
+                        'default_visible' => true,
+                        'default_required' => true,
+                        'hint' => 'Customer problem description',
+                    ],
+                    'diagnosis_notes' => [
+                        'label' => 'Initial Diagnosis Notes',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Counter check-in inspection notes',
+                    ],
+                    'technician' => [
+                        'label' => 'Assign Technician',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Staff technician assigned to repair',
+                    ],
+                    'estimated_cost' => [
+                        'label' => 'Estimated Repair Cost (₹)',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Estimated quote for the customer',
+                    ],
+                    'expected_completion_date' => [
+                        'label' => 'Expected Delivery Date',
+                        'system' => false,
+                        'default_visible' => true,
+                        'default_required' => false,
+                        'hint' => 'Target completion date',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -410,6 +597,21 @@ class DynamicFormConfig
     public static function isFieldVisible(?Tenant $tenant, string $form, string $field): bool
     {
         $tenant = $tenant ?? TenantContext::get();
+
+        // Business-type awareness
+        if ($tenant) {
+            if ($tenant->isRepairOnly()) {
+                // In repair-only businesses, device-only fields are not applicable
+                if ($form === 'item' && in_array($field, ['imei_1', 'imei_2', 'serial_number', 'condition', 'storage', 'color'], true)) {
+                    return false;
+                }
+            } elseif ($tenant->isSellingOnly()) {
+                // In selling-only businesses, repair forms are not applicable
+                if (in_array($form, ['spare_part', 'repair_job'], true)) {
+                    return false;
+                }
+            }
+        }
 
         // System-critical fields cannot be hidden
         $forms = self::getForms();

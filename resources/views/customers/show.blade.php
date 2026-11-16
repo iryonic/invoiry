@@ -58,10 +58,19 @@
                 </button>
             @endif
 
-            <a href="{{ route('invoices.create', ['customer_id' => $customer->id]) }}" class="btn-secondary min-h-[42px] text-xs inline-flex items-center gap-1.5 bg-[#050505] text-white hover:bg-black hover:text-[#B7FF00] border-black">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                <span class="font-bold">New Bill</span>
-            </a>
+            @if($tenant?->supportsRepair())
+                <a href="{{ route('repairs.create', ['customer_id' => $customer->id]) }}" class="btn-secondary min-h-[42px] text-xs inline-flex items-center gap-1.5 bg-[#0369A1] text-white hover:bg-[#0284C7] border-transparent">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="font-bold">New Repair</span>
+                </a>
+            @endif
+
+            @if($tenant?->supportsSelling())
+                <a href="{{ route('invoices.create', ['customer_id' => $customer->id]) }}" class="btn-secondary min-h-[42px] text-xs inline-flex items-center gap-1.5 bg-[#050505] text-white hover:bg-black hover:text-[#B7FF00] border-black">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    <span class="font-bold">New Bill</span>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -185,6 +194,14 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 <span>Payment Receipts ({{ $customer->payments->count() }})</span>
             </button>
+
+            @if($tenant?->supportsRepair())
+                <button type="button" onclick="switchCustomerTab('repairs')" id="tabBtn-repairs"
+                    class="customer-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-[#666666] hover:text-[#111111] hover:bg-white whitespace-nowrap transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>Repair Orders ({{ $customer->repairJobs?->count() ?? 0 }})</span>
+                </button>
+            @endif
 
             <button type="button" onclick="switchCustomerTab('details')" id="tabBtn-details"
                 class="customer-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-[#666666] hover:text-[#111111] hover:bg-white whitespace-nowrap transition">
@@ -418,6 +435,98 @@
                 </div>
             </div>
         </div>
+
+        @if($tenant?->supportsRepair())
+            <!-- TAB 4: Repair Jobs / Service Orders -->
+            <div id="tabPanel-repairs" class="customer-tab-panel hidden space-y-4">
+                <div class="card-surface p-4 sm:p-6 shadow-2xs space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E6E6E6] pb-3">
+                        <div>
+                            <h2 class="text-xs font-bold text-[#111111] uppercase tracking-wider">Device Repair History</h2>
+                            <p class="text-[11px] text-[#666666]">Hardware and software service orders registered for this customer</p>
+                        </div>
+                        <a href="{{ route('repairs.create', ['customer_id' => $customer->id]) }}" class="btn-lime text-xs inline-flex items-center gap-1.5 font-bold">
+                            <svg class="w-3.5 h-3.5 text-[#101010]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            <span>+ Check In New Device</span>
+                        </a>
+                    </div>
+
+                    @if(!isset($customer->repairJobs) || $customer->repairJobs->isEmpty())
+                        <div class="py-12 text-center space-y-3">
+                            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] mx-auto flex items-center justify-center">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <p class="text-xs text-[#666666] font-medium">No repair orders logged for this customer yet.</p>
+                            <div class="pt-1">
+                                <a href="{{ route('repairs.create', ['customer_id' => $customer->id]) }}" class="btn-lime text-xs inline-flex items-center gap-1.5 font-bold">
+                                    <span>Check In First Repair</span>
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-[#F7F7F6] border-b border-[#E6E6E6] text-[#666666] uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th class="py-3 px-3">Job #</th>
+                                        <th class="py-3 px-3">Device &amp; Details</th>
+                                        <th class="py-3 px-3">Reported Problem</th>
+                                        <th class="py-3 px-3">Technician</th>
+                                        <th class="py-3 px-3">Status</th>
+                                        <th class="py-3 px-3 text-right">Cost &amp; Due</th>
+                                        <th class="py-3 px-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E6E6E6] text-[#111111]">
+                                    @foreach($customer->repairJobs as $rjob)
+                                        <tr class="hover:bg-[#F7F7F6]/60 transition">
+                                            <td class="py-3 px-3 font-mono font-bold align-top">
+                                                <a href="{{ route('repairs.show', $rjob) }}" class="hover:underline">
+                                                    #{{ $rjob->job_number }}
+                                                </a>
+                                                <div class="text-[10px] text-[#888888] font-normal">
+                                                    {{ $rjob->created_at->format('d M Y') }}
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-3 align-top">
+                                                <div class="font-bold text-[#111111]">{{ $rjob->device_brand }} {{ $rjob->device_model }}</div>
+                                                @if($rjob->imei)
+                                                    <div class="text-[10px] font-mono text-[#888888]">IMEI: {{ $rjob->imei }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="py-3 px-3 align-top max-w-[200px]">
+                                                <div class="line-clamp-2 text-[#333333]">{{ $rjob->reported_problem }}</div>
+                                            </td>
+                                            <td class="py-3 px-3 align-top">
+                                                {{ $rjob->technician->name ?? 'Unassigned' }}
+                                            </td>
+                                            <td class="py-3 px-3 align-top">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $rjob->status_info['color'] ?? 'bg-gray-100' }}">
+                                                    {{ $rjob->status_info['label'] }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-3 align-top text-right font-mono">
+                                                <div class="font-bold">₹{{ number_format($rjob->total_amount, 2) }}</div>
+                                                @if($rjob->due_balance > 0)
+                                                    <div class="text-[10px] font-semibold text-[#DC2626]">Due: ₹{{ number_format($rjob->due_balance, 2) }}</div>
+                                                @else
+                                                    <div class="text-[10px] font-semibold text-[#079455]">Settled</div>
+                                                @endif
+                                            </td>
+                                            <td class="py-3 px-3 align-top text-right whitespace-nowrap">
+                                                <a href="{{ route('repairs.show', $rjob) }}" class="btn-secondary text-xs px-2.5 py-1 inline-flex items-center gap-1 font-semibold">
+                                                    <span>Workshop</span>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 

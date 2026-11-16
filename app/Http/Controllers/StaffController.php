@@ -42,7 +42,7 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'in:tenant_admin,cashier'],
+            'role' => ['required', 'in:tenant_admin,cashier,technician'],
             'password' => ['required', 'string', 'min:6'],
         ]);
 
@@ -73,7 +73,7 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($staff->id)],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'in:tenant_admin,cashier'],
+            'role' => ['required', 'in:tenant_admin,cashier,technician'],
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\BusinessTypeManager;
 use App\Services\TenantContext;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -93,9 +94,29 @@ class User extends Authenticatable
         return $this->role === 'cashier';
     }
 
+    public function isTechnician(): bool
+    {
+        return $this->role === 'technician';
+    }
+
+    public function assignedRepairJobs(): HasMany
+    {
+        return $this->hasMany(RepairJob::class, 'assigned_to');
+    }
+
     public function hasPermission(string $permission): bool
     {
-        // Super Admin bypasses all checks
+        $tenant = $this->tenant ?? TenantContext::get();
+
+        // Business-type restriction: independent of individual user permissions
+        if ($tenant) {
+            $module = explode('.', $permission)[0];
+            if (! BusinessTypeManager::isModuleAllowed($tenant->business_type ?? BusinessTypeManager::TYPE_SELLING, $module)) {
+                return false;
+            }
+        }
+
+        // Super Admin bypasses role checks (when not restricted by tenant business-type above)
         if ($this->isSuperAdmin()) {
             return true;
         }
@@ -123,16 +144,29 @@ class User extends Authenticatable
             $allowedCashierActions = [
                 'dashboard.view', 'dashboard',
                 'invoices.view', 'invoices.create', 'invoices.print', 'invoices.record_payments', 'invoices.email',
-                'items.view', 'customers.view', 'customers.create',
+                'repairs.view', 'repairs.create', 'repairs.payments', 'repairs.print',
+                'items.view', 'spare_parts.view', 'customers.view', 'customers.create',
             ];
             $module = explode('.', $permission)[0];
-            if (! in_array($permission, $allowedCashierActions, true) && ! in_array($module, ['dashboard', 'invoices', 'items', 'customers'], true)) {
+            if (! in_array($permission, $allowedCashierActions, true) && ! in_array($module, ['dashboard', 'invoices', 'repairs', 'items', 'spare_parts', 'customers'], true)) {
                 return false;
             }
         }
 
-        // 3. Check tenant-level permissions
-        $tenant = $this->tenant ?? TenantContext::get();
+        // 3. Role-level baseline for technicians without custom overrides
+        if ($this->role === 'technician') {
+            $allowedTechnicianActions = [
+                'dashboard.view', 'dashboard',
+                'repairs.view', 'repairs.edit', 'repairs.status_update', 'repairs.billing', 'repairs.print',
+                'spare_parts.view', 'customers.view',
+            ];
+            $module = explode('.', $permission)[0];
+            if (! in_array($permission, $allowedTechnicianActions, true) && ! in_array($module, ['dashboard', 'repairs', 'spare_parts', 'customers'], true)) {
+                return false;
+            }
+        }
+
+        // 4. Check tenant-level permissions
         if ($tenant && is_array($tenant->permissions)) {
             if (array_key_exists($permission, $tenant->permissions)) {
                 return (bool) $tenant->permissions[$permission];

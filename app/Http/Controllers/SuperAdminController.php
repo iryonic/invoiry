@@ -87,6 +87,12 @@ class SuperAdminController extends Controller
             }
         }
 
+        if ($type = $request->input('business_type')) {
+            if ($type !== 'all') {
+                $query->where('business_type', $type);
+            }
+        }
+
         if ($request->has('status') && $request->input('status') !== 'all') {
             $query->where('is_active', $request->input('status') === 'active');
         }
@@ -113,6 +119,7 @@ class SuperAdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:tenants,email', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20'],
+            'business_type' => ['required', 'in:selling,repair,both'],
             'plan' => ['required', 'in:trial,starter,pro,enterprise'],
             'admin_name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:6'],
@@ -125,7 +132,7 @@ class SuperAdminController extends Controller
 
         $permissions = $request->has('permissions')
             ? RbacPermissionManager::normalizeFromRequest($request->input('permissions', []))
-            : RbacPermissionManager::getDefaultPermissions();
+            : RbacPermissionManager::getDefaultPermissions($validated['business_type']);
 
         $formFields = $request->has('form_fields')
             ? DynamicFormConfig::normalizeFromRequest($request->input('form_fields', []))
@@ -139,18 +146,21 @@ class SuperAdminController extends Controller
         $defaultTrialDays = (int) SystemSetting::get('default_trial_days', 30);
 
         try {
-            [$tenant, $admin] = DB::transaction(function () use ($validated, $slug, $defaultTrialDays, $permissions, $formFields) {
+            [$tenant, $admin] = DB::transaction(function () use ($validated, $slug, $defaultTrialDays, $permissions, $formFields, $request) {
                 $tenant = Tenant::create([
                     'name' => $validated['name'],
                     'slug' => $slug,
                     'email' => $validated['email'],
                     'phone' => $validated['phone'],
+                    'business_type' => $validated['business_type'],
                     'plan' => $validated['plan'],
                     'address' => $validated['address'] ?? null,
                     'city' => $validated['city'] ?? null,
                     'state' => $validated['state'] ?? 'Jammu & Kashmir',
                     'gstin' => $validated['gstin'] ?? null,
                     'upi_id' => $validated['upi_id'] ?? null,
+                    'repair_job_prefix' => $request->input('repair_job_prefix', 'REP-') ?: 'REP-',
+                    'repair_job_counter' => 1,
                     'expires_at' => now()->addDays($defaultTrialDays),
                     'is_active' => true,
                     'permissions' => $permissions,
@@ -185,23 +195,27 @@ class SuperAdminController extends Controller
      */
     public function showTenant(Tenant $tenant): View
     {
-        $tenant->loadCount(['users', 'invoices', 'items']);
+        $tenant->loadCount(['users', 'invoices', 'items', 'spareParts', 'repairJobs']);
         $tenantUsers = User::where('tenant_id', $tenant->id)->latest()->get();
         $recentInvoices = Invoice::where('tenant_id', $tenant->id)->with('customer')->latest()->take(10)->get();
         $recentStock = Item::where('tenant_id', $tenant->id)->latest()->take(10)->get();
+        $recentRepairJobs = $tenant->repairJobs()->with(['customer', 'technician'])->latest()->take(10)->get();
 
         $totalSales = (float) Invoice::where('tenant_id', $tenant->id)->sum('grand_total');
         $totalCollected = (float) Invoice::where('tenant_id', $tenant->id)->sum('amount_paid');
         $inStockDevices = Item::where('tenant_id', $tenant->id)->inStock()->count();
+        $totalRepairRevenue = (float) $tenant->repairJobs()->sum('total_amount');
 
         return view('superadmin.tenants.show', compact(
             'tenant',
             'tenantUsers',
             'recentInvoices',
             'recentStock',
+            'recentRepairJobs',
             'totalSales',
             'totalCollected',
-            'inStockDevices'
+            'inStockDevices',
+            'totalRepairRevenue'
         ));
     }
 
@@ -222,9 +236,11 @@ class SuperAdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('tenants')->ignore($tenant->id)],
             'phone' => ['required', 'string', 'max:20'],
+            'business_type' => ['required', 'in:selling,repair,both'],
             'plan' => ['required', 'in:trial,starter,pro,enterprise'],
             'expires_at' => ['nullable', 'date'],
             'invoice_prefix' => ['nullable', 'string', 'max:10'],
+            'repair_job_prefix' => ['nullable', 'string', 'max:10'],
             'gstin' => ['nullable', 'string', 'max:30'],
             'upi_id' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
@@ -237,15 +253,17 @@ class SuperAdminController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
+            'business_type' => $validated['business_type'],
             'plan' => $validated['plan'],
             'expires_at' => $validated['expires_at'] ?? $tenant->expires_at,
             'invoice_prefix' => $validated['invoice_prefix'] ?? $tenant->invoice_prefix,
+            'repair_job_prefix' => $validated['repair_job_prefix'] ?? ($tenant->repair_job_prefix ?: 'REP-'),
             'gstin' => $validated['gstin'] ?? null,
             'upi_id' => $validated['upi_id'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'state' => $validated['state'] ?? null,
-            'is_active' => $request->has('is_active'),
+            'address' => $validated['address'] ?? $tenant->address,
+            'city' => $validated['city'] ?? $tenant->city,
+            'state' => $validated['state'] ?? $tenant->state ?? 'Jammu & Kashmir',
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $tenant->is_active,
         ]);
 
         AuditLog::record('tenant.updated', "Updated store details for \"{$tenant->name}\"", $tenant->id);

@@ -33,7 +33,12 @@ class InvoiceController extends Controller
     public function index(Request $request): View
     {
         $tenant = TenantContext::get();
-        $query = Invoice::where('tenant_id', $tenant->id)->with(['customer', 'items']);
+        $query = Invoice::where('tenant_id', $tenant->id)->with(['customer', 'items', 'repairJob']);
+
+        // Invoice type filter (sale vs repair)
+        if ($request->filled('type') && in_array($request->type, ['sale', 'repair'], true)) {
+            $query->where('invoice_type', $request->type);
+        }
 
         // Payment / Invoice status filter
         if ($request->filled('status') && $request->status !== 'all') {

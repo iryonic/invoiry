@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckBusinessType;
 use App\Http\Middleware\CheckMaintenanceMode;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureTerminalNotLocked;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserRole::class,
             'permission' => CheckPermission::class,
+            'business_type' => CheckBusinessType::class,
             'terminal.lock' => EnsureTerminalNotLocked::class,
         ]);
     })

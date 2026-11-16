@@ -20,6 +20,7 @@ class Payment extends Model
     protected $fillable = [
         'tenant_id',
         'invoice_id',
+        'repair_job_id',
         'customer_id',
         'amount',
         'payment_method',
@@ -49,6 +50,11 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function repairJob(): BelongsTo
+    {
+        return $this->belongsTo(RepairJob::class);
     }
 
     public function customer(): BelongsTo

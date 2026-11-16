@@ -47,10 +47,16 @@ class CustomerController extends Controller
         $tenant = TenantContext::get();
         abort_if($customer->tenant_id !== $tenant->id, 403);
 
-        $customer->load([
+        $relations = [
             'invoices' => fn ($q) => $q->orderByDesc('invoice_date')->orderByDesc('id')->with('items'),
             'payments' => fn ($q) => $q->orderByDesc('payment_date')->orderByDesc('id')->with('invoice'),
-        ]);
+        ];
+
+        if ($tenant->supportsRepair()) {
+            $relations['repairJobs'] = fn ($q) => $q->orderByDesc('created_at')->with(['technician', 'items']);
+        }
+
+        $customer->load($relations);
 
         return view('customers.show', compact('customer', 'tenant'));
     }

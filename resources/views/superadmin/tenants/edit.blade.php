@@ -48,6 +48,25 @@
                     </select>
                 </div>
 
+                <!-- Business Type Selector -->
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-bold text-[#344054] mb-1">Business Model Type *</label>
+                    <select name="business_type" required class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-bold text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                        <option value="selling" {{ old('business_type', $tenant->business_type ?? 'selling') === 'selling' ? 'selected' : '' }}>
+                            Mobile Selling &amp; Reselling (Devices, IMEIs, Counter POS)
+                        </option>
+                        <option value="repair" {{ old('business_type', $tenant->business_type) === 'repair' ? 'selected' : '' }}>
+                            Mobile Repair (Spare Parts Catalogue, Service Jobs, Technicians)
+                        </option>
+                        <option value="both" {{ old('business_type', $tenant->business_type) === 'both' ? 'selected' : '' }}>
+                            Both Selling &amp; Repair (Full Dual Infrastructure)
+                        </option>
+                    </select>
+                    <p class="text-[11px] text-[#666666] mt-1">
+                        Controls visible navigation modules, dynamic form validation, and stock tracking structures. Existing records and invoices remain completely preserved.
+                    </p>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-[#344054] mb-1">Store Email *</label>
                     <input type="email" name="email" value="{{ old('email', $tenant->email) }}" required
@@ -69,6 +88,12 @@
                 <div>
                     <label class="block text-xs font-bold text-[#344054] mb-1">Invoice Prefix</label>
                     <input type="text" name="invoice_prefix" value="{{ old('invoice_prefix', $tenant->invoice_prefix) }}"
+                        class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-mono text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-[#344054] mb-1">Repair Job Prefix</label>
+                    <input type="text" name="repair_job_prefix" value="{{ old('repair_job_prefix', $tenant->repair_job_prefix ?? 'REP-') }}"
                         class="w-full px-3.5 py-2.5 bg-[#F7F7F6] border border-[#E6E6E6] rounded-xl text-xs sm:text-sm font-mono text-[#111111] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111111]">
                 </div>
 
